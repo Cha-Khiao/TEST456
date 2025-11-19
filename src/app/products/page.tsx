@@ -1,6 +1,4 @@
 // src/app/products/page.tsx
-export const dynamic = 'force-dynamic';
-
 import API_ENDPOINTS from '@/lib/api';
 import ProductsView from '@/components/ProductsView'; // เรียกใช้ Component ที่เราเพิ่งสร้าง
 

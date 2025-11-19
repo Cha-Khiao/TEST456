@@ -1,6 +1,4 @@
 // src/app/page.tsx
-export const dynamic = 'force-dynamic';
-
 import HomeView from '@/components/HomeView';
 import API_ENDPOINTS from '@/lib/api';
 import { Product } from '@/types';

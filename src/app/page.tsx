@@ -1,15 +1,14 @@
 // src/app/page.tsx
 import HomeView from '@/components/HomeView';
 import API_ENDPOINTS from '@/lib/api';
-import { Product } from '@/types';
+import { Product } from '@/types'; // ใช้ Type กลางที่เราสร้างไว้
 
 // ไซส์ทั้งหมด (เรียงลำดับแล้ว)
 const ALL_SIZES = ['SSS', 'SS', 'S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL', '6XL', '7XL', '8XL', '9XL', '10XL'];
 
-async function getProducts() {
+async function getProducts(): Promise<Product[]> {
   try {
-    // no-store = ห้าม cache (เพื่อให้เห็นสต็อกล่าสุดเสมอ)
-    const res = await fetch(API_ENDPOINTS.PRODUCTS, { cache: 'no-store' });
+    const res = await fetch(API_ENDPOINTS.PRODUCTS, { cache: 'no-store' }); // no-store เพื่อให้ได้ data ล่าสุดเสมอ
     if (!res.ok) throw new Error('Failed to fetch products');
     return res.json();
   } catch (error) {
@@ -19,42 +18,58 @@ async function getProducts() {
 }
 
 export default async function Home() {
-  const products: Product[] = await getProducts(); 
-  const normalProduct = products.find(p => p.type === 'normal');
+  const products = await getProducts();
 
-  // --- เริ่มกระบวนการคำนวณสถิติ (Aggregation) ---
-  const mourningProduct = products.find((p: any) => p.type === 'mourning');
+  // --- เตรียมข้อมูลสินค้าแยกประเภท (ถ้าหาไม่เจอ จะได้ undefined ซึ่ง code รับมือได้) ---
+  const normalProducts = products.filter(p => p.type === 'normal');
+  const mourningProducts = products.filter(p => p.type === 'mourning');
 
-  // 1. ยอดขายรวม (Sold)
-  const normalSold = normalProduct?.stock?.reduce((sum: number, s: any) => sum + (s.sold || 0), 0) || 0;
-  const mourningSold = mourningProduct?.stock?.reduce((sum: number, s: any) => sum + (s.sold || 0), 0) || 0;
+  // 1. คำนวณยอดขายรวม (Sold) จากทุกสินค้าใน DB
+  const totalSold = products.reduce((sum, p) => {
+      return sum + (p.stock?.reduce((sSum, s) => sSum + (s.sold || 0), 0) || 0);
+  }, 0);
+
+  const normalSold = normalProducts.reduce((sum, p) => sum + (p.stock?.reduce((sSum, s) => sSum + (s.sold || 0), 0) || 0), 0);
+  const mourningSold = mourningProducts.reduce((sum, p) => sum + (p.stock?.reduce((sSum, s) => sSum + (s.sold || 0), 0) || 0), 0);
   
   const salesStats = {
-    total: { sold: normalSold + mourningSold },
+    total: { sold: totalSold },
     normal: { sold: normalSold },
     mourning: { sold: mourningSold }
   };
 
-  // 2. สต็อกคงเหลือแยกไซส์ (Stock Counts)
+  // 2. คำนวณสต็อกคงเหลือแยกไซส์ (รวมทุก Product ใน Type นั้นๆ)
+  // (สมมติว่าถ้ามีเสื้อปกติ 2 ลาย ไซส์ S จะถูกนำมาบวกกัน)
+  
   const sizeStatsTotal = ALL_SIZES.map(size => {
-    const n = normalProduct?.stock?.find((s: any) => s.size === size)?.quantity || 0;
-    const m = mourningProduct?.stock?.find((s: any) => s.size === size)?.quantity || 0;
-    return { size, count: n + m };
+    // วนลูปสินค้าทุกตัว เอา quantity ของไซส์นี้มาบวกกัน
+    const count = products.reduce((sum, p) => {
+        const found = p.stock?.find(s => s.size === size);
+        return sum + (found ? found.quantity : 0);
+    }, 0);
+    return { size, count };
   });
 
   const sizeStatsNormal = ALL_SIZES.map(size => {
-    const n = normalProduct?.stock?.find((s: any) => s.size === size)?.quantity || 0;
-    return { size, count: n };
+    const count = normalProducts.reduce((sum, p) => {
+        const found = p.stock?.find(s => s.size === size);
+        return sum + (found ? found.quantity : 0);
+    }, 0);
+    return { size, count };
   });
 
   const sizeStatsMourning = ALL_SIZES.map(size => {
-    const m = mourningProduct?.stock?.find((s: any) => s.size === size)?.quantity || 0;
-    return { size, count: m };
+    const count = mourningProducts.reduce((sum, p) => {
+        const found = p.stock?.find(s => s.size === size);
+        return sum + (found ? found.quantity : 0);
+    }, 0);
+    return { size, count };
   });
 
-  // ส่งข้อมูลที่คำนวณเสร็จแล้วไปให้ Component แสดงผล
+  // ส่งข้อมูล products ตัวจริงไปด้วย เพื่อให้ HomeView เอาไป render Carousel
   return (
     <HomeView 
+      products={products} // ✅ ส่งสินค้าทั้งหมดไปให้ Carousel
       salesStats={salesStats}
       sizeStatsTotal={sizeStatsTotal}
       sizeStatsNormal={sizeStatsNormal}

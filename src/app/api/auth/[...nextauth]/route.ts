@@ -7,14 +7,10 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
 
 export const authOptions: AuthOptions = {
   providers: [
-    // 1. Google Login
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID || "",
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
-      // ✅ Google จะส่งชื่อมาให้อยู่แล้ว (profile.name) NextAuth จัดการให้อัตโนมัติ
     }),
-    
-    // 2. เบอร์โทรศัพท์ (Credentials)
     CredentialsProvider({
       name: "Credentials",
       credentials: {
@@ -26,7 +22,6 @@ export const authOptions: AuthOptions = {
         const { identifier, password, isUserLogin } = credentials || {};
 
         try {
-          // ยิงไป Backend (ซึ่งตอนนี้ Backend ฉลาดพอที่จะสร้าง User ให้ถ้าไม่มี)
           const res = await fetch(`${API_URL}/auth/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -39,16 +34,18 @@ export const authOptions: AuthOptions = {
             throw new Error(user.error || "เข้าสู่ระบบไม่สำเร็จ");
           }
 
-          // ✅ Return ข้อมูลเข้า Session
-          // user.name ที่ Backend ส่งมาคือ:
-          // - ถ้าเป็น User ใหม่/เก่า -> เป็นเบอร์โทร
-          // - ถ้าเป็น Admin -> เป็น "Administrator"
-          return {
-            id: user.id,
-            name: user.name,
-            role: user.role,
-            accessToken: user.token
-          };
+          // ✅ จุดที่ 1: รับ Token จาก Backend (user.token) มาตั้งชื่อใหม่ว่า accessToken
+          if (user.token) {
+            return {
+              id: user.id,
+              name: user.name,
+              email: null,
+              role: user.role,
+              accessToken: user.token, // 👈 สำคัญมาก! ต้องเก็บตรงนี้
+            };
+          }
+          
+          return null;
 
         } catch (error: any) {
           throw new Error(error.message);
@@ -60,26 +57,28 @@ export const authOptions: AuthOptions = {
     signIn: '/auth/login', 
   },
   callbacks: {
-  async jwt({ token, user }: any) {
-    if (user) {
-      token.role = user.role;
-      token.id = user.id;
-      token.accessToken = user.accessToken; // ✅ ฝังลง JWT
+    // ✅ จุดที่ 2: เอา accessToken ยัดใส่ JWT Token
+    async jwt({ token, user }: any) {
+      if (user) {
+        token.role = user.role;
+        token.id = user.id;
+        token.accessToken = user.accessToken; // 👈 รับช่วงต่อมา
+      }
+      return token;
+    },
+    // ✅ จุดที่ 3: เอา accessToken จาก JWT ยัดใส่ Session (เพื่อให้หน้าเว็บเรียกใช้ได้)
+    async session({ session, token }: any) {
+      if (session.user) {
+        // @ts-ignore
+        session.user.role = token.role;
+        // @ts-ignore
+        session.user.id = token.id;
+        // @ts-ignore
+        session.accessToken = token.accessToken; // 👈 ส่งไม้ต่อให้ Frontend
+      }
+      return session;
     }
-    return token;
   },
-  async session({ session, token }: any) {
-    if (session.user) {
-      // @ts-ignore
-      session.user.role = token.role;
-      // @ts-ignore
-      session.user.id = token.id;
-      // @ts-ignore
-      session.user.accessToken = token.accessToken; // ✅ ฝังลง Session เพื่อให้ Client เรียกใช้
-    }
-    return session;
-  }
-},
   session: { strategy: "jwt" },
   secret: process.env.NEXTAUTH_SECRET,
 };

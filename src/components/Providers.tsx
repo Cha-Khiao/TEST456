@@ -1,14 +1,14 @@
+// src/components/Providers.tsx
 'use client';
 
 import { SessionProvider } from 'next-auth/react';
-import { SSRProvider } from 'react-bootstrap'; // ช่วยเรื่อง hydration ของ Bootstrap
+// ❌ ลบ import { SSRProvider } ออก
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   return (
     <SessionProvider>
-      <SSRProvider>
+       {/* ❌ ลบ <SSRProvider> ที่ครอบไว้ออก ให้เหลือแค่ children เพียวๆ */}
         {children}
-      </SSRProvider>
     </SessionProvider>
   );
 }

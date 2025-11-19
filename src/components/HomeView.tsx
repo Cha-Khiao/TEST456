@@ -7,8 +7,9 @@ import Image from 'next/image';
 import { Container, Row, Col, Card, Carousel } from 'react-bootstrap';
 import { 
   FaShoppingCart, FaTshirt, FaTruck, FaTag, 
-  FaLine, FaFacebook, FaMoneyBillWave, FaClipboardList, FaChartPie, FaBoxOpen, FaRulerCombined
+  FaLine, FaFacebook, FaMoneyBillWave, FaChartPie, FaBoxOpen, FaRulerCombined, FaClipboardList
 } from 'react-icons/fa';
+import { Product } from '@/types';
 
 // --- Types ---
 interface StockStat {
@@ -17,6 +18,7 @@ interface StockStat {
 }
 
 interface HomeViewProps {
+  products: Product[];
   salesStats: {
     total: { sold: number };
     normal: { sold: number };
@@ -46,59 +48,19 @@ const sizeChartData = [
   { size: '10XL', chest: 62, length: 38 },
 ];
 
-const heroSlides = [
-  { src: '/images/100.png', alt: 'มุมมองด้านหน้า' },
-  { src: '/images/200.png', alt: 'มุมมองด้านหลัง' },
-  // { src: '/images/300.png', alt: 'รายละเอียดลาย' },
-];
-
-const productVariants = [
-  {
-    id: 'normal',
-    title: 'เสื้อที่ระลึก 243 ปี',
-    description: 'เนื้อผ้า Micro Polyester เกรดพรีเมียม สัมผัสนุ่ม ใส่สบาย ระบายอากาศดีเยี่ยม ลวดลายเอกลักษณ์ "ศรีสะเกษ" ที่คุณภูมิใจ',
-    image: '/images/100.png', 
-    theme: 'primary', 
-    textColor: 'text-primary',
-    bgColor: 'bg-primary'
-  },
-  {
-    id: 'mourning',
-    title: 'เสื้อที่ระลึก 243 ปี (โทนขาว-ดำ)',
-    description: 'ออกแบบด้วยโทนสีสุภาพ ขาว-ดำ เรียบหรู เหมาะสำหรับการสวมใส่ในวาระโอกาสสำคัญ หรือร่วมพิธีการต่างๆ',
-    image: '/images/200.png', 
-    theme: 'dark', 
-    textColor: 'text-dark',
-    bgColor: 'bg-dark'
-  }
-];
-
 // --- Helper Components ---
-const SizeGrid = ({ data, title, themeColor }: { data: StockStat[], title: string, themeColor: string }) => {
-  let badgeClass = "bg-secondary";
-  let borderClass = "border-secondary text-secondary";
-  
-  if (themeColor === 'primary') {
-    badgeClass = "bg-primary";
-    borderClass = "border-primary text-primary";
-  } else if (themeColor === 'dark') {
-    badgeClass = "bg-dark";
-    borderClass = "border-dark text-dark";
-  } else if (themeColor === 'warning') {
-    badgeClass = "bg-warning text-dark";
-    borderClass = "border-warning text-dark";
-  }
-
+const SizeGrid = ({ data, title }: { data: StockStat[], title: string }) => {
   return (
-    <div className="mb-4">
-      <h6 className="fw-bold mb-2 d-flex align-items-center">
-        <span className={`badge ${badgeClass} rounded-pill px-3 py-1 shadow-sm me-2`}>{title}</span>
+    <div className="mb-2">
+      <h6 className="fw-bold mb-3 d-flex align-items-center justify-content-between">
+        <span className="badge bg-warning text-dark rounded-pill px-3 py-1 shadow-sm">{title}</span>
+        <small className="text-muted fw-normal" style={{fontSize: '0.75rem'}}>อัปเดตล่าสุด (Real-time)</small>
       </h6>
       <div className="d-flex flex-wrap align-items-center gap-1">
         {data.map((item, index) => (
-          <div key={index} className={`stock-item-flexible ${borderClass}`} style={{borderColor: 'currentColor'}}>
-             <div className="fw-bold small text-dark">{item.size}</div>
-             <div className="fw-bold" style={{fontSize: '0.8rem'}}>
+          <div key={index} className="stock-item-flexible border-warning text-dark bg-white" style={{borderColor: '#ffc107', minWidth: '55px'}}>
+             <div className="fw-bold small text-secondary">{item.size}</div>
+             <div className="fw-bold" style={{fontSize: '0.9rem'}}>
                 {item.count > 0 ? item.count.toLocaleString() : <span className="text-danger text-opacity-50">-</span>}
              </div>
           </div>
@@ -110,13 +72,23 @@ const SizeGrid = ({ data, title, themeColor }: { data: StockStat[], title: strin
 
 const SmartImage = ({ src, alt, type = 'product' }: { src: string, alt: string, type?: 'product'|'qr' }) => {
   const [error, setError] = useState(false);
-  if (error) return <div className={`d-flex align-items-center justify-content-center text-muted bg-light rounded-3 border border-dashed ${type === 'qr' ? 'w-100 h-100' : 'w-100'}`} style={type === 'product' ? {height: '300px'} : {}}><div className="text-center opacity-50 p-2">{type === 'qr' ? <FaClipboardList size={20}/> : <FaTshirt size={40}/>}<div style={{fontSize: '0.7rem', marginTop: '5px'}}>Not Found</div></div></div>;
-  return <div className={`position-relative ${type === 'qr' ? 'w-100 h-100' : 'w-100 h-100'}`}><Image src={src} alt={alt} fill style={{ objectFit: 'contain', filter: type === 'product' ? 'drop-shadow(0 10px 20px rgba(0,0,0,0.1))' : 'none' }} onError={() => setError(true)} /></div>;
+  if (error || !src) return <div className={`d-flex align-items-center justify-content-center text-muted bg-light rounded-3 border border-dashed ${type === 'qr' ? 'w-100 h-100' : 'w-100'}`} style={type === 'product' ? {height: '300px'} : {}}><div className="text-center opacity-50 p-2">{type === 'qr' ? <FaClipboardList size={20}/> : <FaTshirt size={40}/>}<div style={{fontSize: '0.7rem', marginTop: '5px'}}>No Image</div></div></div>;
+  
+  return (
+    <div className={`position-relative ${type === 'qr' ? 'w-100 h-100' : 'w-100 h-100'}`}>
+        <Image 
+            src={src} 
+            alt={alt} 
+            fill 
+            style={{ objectFit: 'contain', filter: type === 'product' ? 'drop-shadow(0 10px 20px rgba(0,0,0,0.1))' : 'none' }} 
+            onError={() => setError(true)} 
+        />
+    </div>
+  );
 };
 
-export default function HomeView({ salesStats, sizeStatsTotal, sizeStatsNormal, sizeStatsMourning }: HomeViewProps) {
-  const isLoggedIn = false; // หรือดึงจาก session ถ้าต้องการ
-
+export default function HomeView({ products, salesStats, sizeStatsTotal }: HomeViewProps) {
+  
   return (
     <>
       {/* Hero Section */}
@@ -139,21 +111,31 @@ export default function HomeView({ salesStats, sizeStatsTotal, sizeStatsNormal, 
                   รายได้สมทบทุนจัดกิจกรรมสร้างสรรค์เพื่อบ้านเกิดของเรา
                 </p>
                 <div className="d-flex gap-3 justify-content-lg-start hero-buttons-mobile-center">
-                  <Link href="/order/create" className="btn btn-primary btn-lg fw-bold px-4 shadow d-inline-flex align-items-center">
+                  <Link href="/order/create" className="btn btn-primary btn-lg fw-bold px-4 shadow d-inline-flex align-items-center hover-lift">
                     <FaShoppingCart className="me-2" /> สั่งซื้อเลย
                   </Link>
                 </div>
               </Col>
               <Col lg={6} className="order-1 order-lg-2">
                  <div className="w-100 position-relative hero-carousel-wrapper" style={{height: '400px'}}>
-                    <Carousel controls={true} indicators={true} interval={3000} touch={true} variant="dark" fade={false} className="h-100 hero-carousel-custom carousel-controls-mobile-visible">
-                      {heroSlides.map((slide, index) => (
-                        <Carousel.Item key={index} className="h-100">
-                          <div className="d-flex justify-content-center align-items-center w-100" style={{ height: '400px' }}>
-                            <SmartImage src={slide.src} alt={slide.alt} type="product" />
-                          </div>
+                    <Carousel controls={true} indicators={products.length > 1} interval={3000} touch={true} variant="dark" fade={false} className="h-100 hero-carousel-custom carousel-controls-mobile-visible">
+                      {products.length > 0 ? (
+                          products.map((p, idx) => (
+                            <Carousel.Item key={idx} className="h-100">
+                              <div className="d-flex justify-content-center align-items-center w-100" style={{ height: '400px' }}>
+                                <SmartImage src={p.imageUrl} alt={p.name} type="product" />
+                              </div>
+                            </Carousel.Item>
+                          ))
+                      ) : (
+                        <Carousel.Item className="h-100">
+                           <div className="d-flex justify-content-center align-items-center w-100" style={{ height: '400px' }}>
+                             <div className="text-muted bg-light rounded-circle d-flex align-items-center justify-content-center" style={{width: 200, height: 200}}>
+                                <FaTshirt size={80} className="opacity-25"/>
+                             </div>
+                           </div>
                         </Carousel.Item>
-                      ))}
+                      )}
                     </Carousel>
                  </div>
               </Col>
@@ -168,44 +150,59 @@ export default function HomeView({ salesStats, sizeStatsTotal, sizeStatsNormal, 
         <Row className="justify-content-center mb-5 mt-2">
             <Col xl={10}>
               <div className="product-carousel-wrapper"> 
-                <Carousel controls={true} indicators={true} interval={5000} variant="dark" fade={false} className="pb-0 product-carousel-custom carousel-controls-mobile-visible">
-                  {productVariants.map((variant) => (
-                    <Carousel.Item key={variant.id}>
-                      <div 
-                        className="bg-white rounded-4 p-4 p-lg-5 position-relative" 
-                        style={{ boxShadow: '0 10px 30px rgba(0, 0, 0, 0.1)', margin: '10px' }}
-                      >
-                        <Row className="align-items-center g-5">
-                          <Col md={6} className="text-center">
-                              <div className="position-relative w-100" style={{height: '350px'}}>
-                                  <SmartImage src={variant.image} alt={variant.title} type="product" />
-                              </div>
-                          </Col>
-                          <Col md={6}>
-                              <h2 className={`fw-bold mb-3 ${variant.textColor}`}>{variant.title}</h2>
-                              <p className="text-secondary mb-4" style={{lineHeight: '1.7', fontSize: '1rem'}}>{variant.description}</p>
-                              <div className="d-flex flex-wrap gap-3 mb-4">
-                                <div className="px-3 py-2 rounded-3 d-flex align-items-center gap-2 fw-bold" style={{backgroundColor: variant.theme === 'dark' ? '#f0f0f0' : '#ececff', color: variant.theme === 'dark' ? '#333' : '#6f6af8'}}>
-                                    <FaTag /> <span>ราคา 198 บาท</span>
-                                </div>
-                                <div className="px-3 py-2 rounded-3 d-flex align-items-center gap-2 fw-bold" style={{backgroundColor: '#e6f8ed', color: '#059669'}}>
-                                    <FaTruck /> <span>ค่าส่งเริ่มต้น 50.-</span>
-                                </div>
-                              </div>
-                              <Link href={`/order/create?type=${variant.id}`} className={`btn ${variant.bgColor} text-white w-100 py-3 fs-5 shadow-lg d-inline-flex justify-content-center align-items-center text-decoration-none rounded-4 hover-lift`} style={{transition: 'all 0.3s ease'}}>
-                                <FaShoppingCart className="me-2"/> สั่งซื้อ{variant.id === 'mourning' ? 'แบบไว้ทุกข์' : ''}ทันที
-                              </Link>
-                          </Col>
-                        </Row>
-                      </div>
-                    </Carousel.Item>
-                  ))}
+                <Carousel controls={true} indicators={products.length > 1} interval={5000} variant="dark" fade={false} className="pb-0 product-carousel-custom carousel-controls-mobile-visible">
+                  {products.map((product) => {
+                      const isMourning = product.type === 'mourning';
+                      const textColor = isMourning ? 'text-dark' : 'text-primary';
+                      const bgColor = isMourning ? 'btn-dark' : 'btn-gradient-primary';
+                      const priceTagBg = isMourning ? '#f0f0f0' : '#ececff';
+                      const priceTagColor = isMourning ? '#333' : '#6f6af8';
+
+                      return (
+                        <Carousel.Item key={product._id}>
+                          <div 
+                            className="bg-white rounded-4 p-4 p-lg-5 position-relative" 
+                            style={{ boxShadow: '0 10px 30px rgba(0, 0, 0, 0.1)', margin: '10px' }}
+                          >
+                            <Row className="align-items-center g-5">
+                              <Col md={6} className="text-center">
+                                  <div className="position-relative w-100" style={{height: '350px'}}>
+                                      <SmartImage src={product.imageUrl} alt={product.name} type="product" />
+                                  </div>
+                              </Col>
+                              <Col md={6}>
+                                  <h2 className={`fw-bold mb-3 ${textColor}`}>{product.name}</h2>
+                                  
+                                  {/* ✅ แก้ไข Point 2: อิงข้อมูลจาก Database เท่านั้น */}
+                                  <p className="text-secondary mb-4 line-clamp-3" style={{lineHeight: '1.7', fontSize: '1rem', minHeight: '60px'}}>
+                                      {product.description || "-"}
+                                  </p>
+
+                                  <div className="d-flex flex-wrap gap-3 mb-4">
+                                    <div className="px-3 py-2 rounded-3 d-flex align-items-center gap-2 fw-bold" style={{backgroundColor: priceTagBg, color: priceTagColor}}>
+                                        <FaTag /> <span>ราคา {product.price.toLocaleString()} บาท</span>
+                                    </div>
+                                    <div className="px-3 py-2 rounded-3 d-flex align-items-center gap-2 fw-bold" style={{backgroundColor: '#e6f8ed', color: '#059669'}}>
+                                        <FaTruck /> <span>ค่าส่งเริ่มต้น 50.-</span>
+                                    </div>
+                                  </div>
+                                  
+                                  <Link href={`/order/create?type=${product.type}`} className={`btn ${bgColor} text-white w-100 py-3 fs-5 shadow-lg d-inline-flex justify-content-center align-items-center text-decoration-none rounded-4 hover-lift`} style={{transition: 'all 0.3s ease'}}>
+                                    <FaShoppingCart className="me-2"/> สั่งซื้อทันที
+                                  </Link>
+                              </Col>
+                            </Row>
+                          </div>
+                        </Carousel.Item>
+                      );
+                  })}
+                  {products.length === 0 && <div className="text-center py-5 bg-white rounded-4">กำลังโหลดข้อมูลสินค้า...</div>}
                 </Carousel>
               </div>
             </Col>
         </Row>
 
-        {/* 2. สถิติยอดขายรวม (จาก Database จริง) */}
+        {/* Stats Section */}
         <div className="mb-4">
            <Card className="shadow-sm rounded-4 overflow-hidden card-border-purple">
              <div className="card-header-gradient-purple p-3 px-4">
@@ -243,15 +240,16 @@ export default function HomeView({ salesStats, sizeStatsTotal, sizeStatsNormal, 
            </Card>
         </div>
 
-        {/* 3. ตารางไซส์ & จำนวนสินค้า (จาก Database จริง) */}
-        <Row className="g-4 mb-5 align-items-start">
+        {/* ✅ Layout ใหม่: ไม่ Stretch และจัด Payment ให้พอดี */}
+        <Row className="g-4 mb-5">
+           {/* Col Left: Size Chart */}
            <Col lg={6}>
-              <Card className="shadow-sm rounded-4 overflow-hidden card-border-teal">
+              <Card className="shadow-sm rounded-4 overflow-hidden card-border-teal h-100">
                  <div className="card-header-gradient-teal p-3 px-4">
-                    <h4 className="fw-bold mb-0 d-flex align-items-center"><FaRulerCombined className="me-3"/> ตารางไซส์ (Size Chart)</h4>
+                    <h4 className="fw-bold mb-0 d-flex align-items-center text-white"><FaRulerCombined className="me-3"/> ตารางไซส์ (Size Chart)</h4>
                  </div>
                  <Card.Body className="p-0">
-                    <table className="table-custom table-striped-custom text-center">
+                    <table className="table-custom table-striped-custom text-center mb-0 h-100">
                       <thead>
                         <tr>
                           <th>SIZE</th>
@@ -273,70 +271,65 @@ export default function HomeView({ salesStats, sizeStatsTotal, sizeStatsNormal, 
               </Card>
            </Col>
 
+           {/* Col Right: Stock & Payment */}
            <Col lg={6}>
-              <Card className="shadow-sm rounded-4 overflow-hidden card-border-orange">
-                 <div className="card-header-gradient-orange p-3 px-4">
-                    <h4 className="fw-bold mb-0 d-flex align-items-center"><FaBoxOpen className="me-3"/> สต็อกคงเหลือแต่ละไซส์</h4>
-                 </div>
-                 <Card.Body className="p-4">
-                    <SizeGrid title="รวมทั้งสิ้น" data={sizeStatsTotal} themeColor="warning"/>
-                    <hr className="my-4 opacity-10"/>
-                    <SizeGrid title="เสื้อสีปกติ" data={sizeStatsNormal} themeColor="primary"/>
-                    <hr className="my-4 opacity-10"/>
-                    <SizeGrid title="เสื้อไว้ทุกข์" data={sizeStatsMourning} themeColor="dark"/>
-                 </Card.Body>
-              </Card>
+              <div className="d-flex flex-column gap-4">
+                  
+                  {/* 1. Stock (เฉพาะยอดรวม) */}
+                  <Card className="shadow-sm rounded-4 overflow-hidden card-border-orange">
+                     <div className="card-header-gradient-orange p-3 px-4">
+                        <h4 className="fw-bold mb-0 d-flex align-items-center text-white"><FaBoxOpen className="me-3"/> สต็อกคงเหลือ (รวมทุกสี)</h4>
+                     </div>
+                     <Card.Body className="p-4">
+                        <SizeGrid title="ยอดรวมคงเหลือ" data={sizeStatsTotal} />
+                     </Card.Body>
+                  </Card>
+
+                  {/* 2. Payment & Contact (ปรับให้พอดีเนื้อหา) */}
+                  <Card className="shadow-sm overflow-hidden rounded-4 card-border-purple">
+                     <div className="card-header-gradient-purple p-3 px-4">
+                        <h4 className="fw-bold mb-0 text-white d-flex align-items-center"><FaMoneyBillWave className="me-3"/> ช่องทางชำระเงิน</h4>
+                     </div>
+                     <Card.Body className="p-4">
+                        {/* Bank Info */}
+                        <div className="d-flex flex-row align-items-center gap-3 mb-4 p-3 bg-light rounded-4 border border-2 shadow-sm">
+                             {/* ✅ แก้ไข Point 3: ใส่พื้นหลังสีน้ำเงินให้ไอคอนขาวมองเห็น */}
+                             <div className="rounded-4 shadow-sm d-flex align-items-center justify-content-center flex-shrink-0 p-2" style={{width: 60, height: 60, backgroundColor: '#1e4598'}}>
+                                <Image src="/images/bank_logos/bbl.svg" alt="Bank" width={40} height={40} style={{objectFit: 'contain'}} /> 
+                             </div>
+                             <div>
+                                <h6 className="text-muted mb-0 small">ธนาคารกรุงเทพ</h6>
+                                <h4 className="fw-bold text-primary mb-0" style={{letterSpacing: '1px'}}>333-4-23368-5</h4>
+                                <small className="text-dark d-block mt-1" style={{fontSize: '0.75rem'}}>บจ. ประชารัฐรักสามัคคีศรีสะเกษ</small>
+                             </div>
+                        </div>
+
+                        {/* Contact Channels */}
+                        <div className="d-flex justify-content-between align-items-center gap-2">
+                           <div className="d-flex gap-3">
+                               <div className="text-center">
+                                  <div className="bg-white border rounded-3 p-1 mb-1 shadow-sm" style={{width: 60, height: 60}}>
+                                     <SmartImage src="/images/qrcode.png" alt="QR" type="qr" />
+                                  </div>
+                                  <small className="fw-bold text-success d-block" style={{fontSize: '0.7rem'}}><FaLine/> LINE</small>
+                               </div>
+                               <div className="text-center">
+                                  <div className="bg-white border rounded-3 p-1 mb-1 shadow-sm" style={{width: 60, height: 60}}>
+                                     <SmartImage src="/images/qrcode.png" alt="QR" type="qr" />
+                                  </div>
+                                  <small className="fw-bold text-primary d-block" style={{fontSize: '0.7rem'}}><FaFacebook/> Page</small>
+                               </div>
+                           </div>
+                           <div className="text-end">
+                               <h6 className="fw-bold text-secondary mb-1">สอบถามเพิ่มเติม</h6>
+                               <a href="tel:0933581622" className="text-decoration-none text-dark fw-bold fs-5 d-block">093-358-1622</a>
+                           </div>
+                        </div>
+                     </Card.Body>
+                  </Card>
+              </div>
            </Col>
         </Row>
-
-        {/* 4. ช่องทางการสั่งซื้อ & ชำระเงิน */}
-        <Card className="shadow-sm overflow-hidden rounded-4 mb-5 card-border-purple">
-           <div className="card-header-gradient-purple p-3 px-4">
-              <h4 className="fw-bold mb-0 text-white d-flex align-items-center"><FaMoneyBillWave className="me-3"/> ช่องทางการสั่งซื้อ & ชำระเงิน</h4>
-           </div>
-           <Card.Body className="p-4 p-lg-5">
-              <Row className="g-5 payment-section-mobile-no-border">
-                 <Col md={5} className="border-end-md text-center text-md-start">
-                    <h5 className="fw-bold text-secondary mb-4">🛒 สั่งซื้อได้ 2 ช่องทาง</h5>
-                    <div className="d-flex gap-4 justify-content-center justify-content-md-start">
-                       <div className="text-center">
-                          <div className="bg-white border rounded-3 p-2 mb-2 shadow-sm" style={{width: 130, height: 130}}>
-                             <SmartImage src="/images/qrcode.png" alt="QR Line" type="qr" />
-                          </div>
-                          <div className="fw-bold text-success"><FaLine size={20}/> LINE</div>
-                       </div>
-                       <div className="text-center">
-                          <div className="bg-white border rounded-3 p-2 mb-2 shadow-sm" style={{width: 130, height: 130}}>
-                             <SmartImage src="/images/qrcode.png" alt="QR Page" type="qr" />
-                          </div>
-                          <div className="fw-bold text-primary"><FaFacebook size={20}/> Page</div>
-                       </div>
-                    </div>
-                    <div className="mt-4 text-muted small">
-                       หรือติดต่อเบอร์: <span className="fw-bold text-dark fs-6">093-358-1622</span> (บริษัท ประชารัฐฯ)
-                    </div>
-                 </Col>
-
-                 <Col md={7} className="text-center text-md-start">
-                    <h5 className="fw-bold text-secondary mb-4">💳 บัญชีธนาคารสำหรับโอนเงิน</h5>
-                    <div className="d-flex flex-column flex-md-row align-items-center gap-4 mb-4 p-4 bg-light rounded-4 border border-2 shadow-sm">
-                       <div className="rounded-4 shadow-sm d-flex align-items-center justify-content-center flex-shrink-0" 
-                           style={{width: 80, height: 80, backgroundColor: '#1a3a71', padding: '10px'}}>
-                          <Image src="/images/bank_logos/bbl.svg" alt="Bangkok Bank Logo" width={60} height={60} style={{objectFit: 'contain'}} /> 
-                       </div>
-                       <div className="text-center text-md-start">
-                          <h6 className="text-muted mb-1">ธนาคารกรุงเทพ (Bangkok Bank)</h6>
-                          <h2 className="fw-bold text-primary mb-0" style={{letterSpacing: '2px'}}>333-4-23368-5</h2>
-                       </div>
-                    </div>
-                    <p className="text-muted mb-0 ps-2 border-start border-4 border-warning text-md-start" style={{textAlign: 'center'}}>
-                       <span className="fw-bold text-dark">ชื่อบัญชี:</span> บจ. ประชารัฐรักสามัคคีศรีสะเกษ (วิสาหกิจเพื่อสังคม)<br/>
-                       <small className="text-danger">* กรุณาตรวจสอบเลขบัญชีและชื่อบัญชีก่อนโอนเงินทุกครั้ง</small>
-                    </p>
-                 </Col>
-              </Row>
-           </Card.Body>
-        </Card>
 
       </Container>
     </>

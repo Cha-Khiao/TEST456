@@ -1,66 +1,64 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+// src/app/page.tsx
+import HomeView from '@/components/HomeView';
+import API_ENDPOINTS from '@/lib/api';
+import { Product } from '@/types';
 
-export default function Home() {
+// ไซส์ทั้งหมด (เรียงลำดับแล้ว)
+const ALL_SIZES = ['SSS', 'SS', 'S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL', '6XL', '7XL', '8XL', '9XL', '10XL'];
+
+async function getProducts() {
+  try {
+    // no-store = ห้าม cache (เพื่อให้เห็นสต็อกล่าสุดเสมอ)
+    const res = await fetch(API_ENDPOINTS.PRODUCTS, { cache: 'no-store' });
+    if (!res.ok) throw new Error('Failed to fetch products');
+    return res.json();
+  } catch (error) {
+    console.error("Fetch Error:", error);
+    return [];
+  }
+}
+
+export default async function Home() {
+  const products: Product[] = await getProducts(); 
+  const normalProduct = products.find(p => p.type === 'normal');
+
+  // --- เริ่มกระบวนการคำนวณสถิติ (Aggregation) ---
+  const mourningProduct = products.find((p: any) => p.type === 'mourning');
+
+  // 1. ยอดขายรวม (Sold)
+  const normalSold = normalProduct?.stock?.reduce((sum: number, s: any) => sum + (s.sold || 0), 0) || 0;
+  const mourningSold = mourningProduct?.stock?.reduce((sum: number, s: any) => sum + (s.sold || 0), 0) || 0;
+  
+  const salesStats = {
+    total: { sold: normalSold + mourningSold },
+    normal: { sold: normalSold },
+    mourning: { sold: mourningSold }
+  };
+
+  // 2. สต็อกคงเหลือแยกไซส์ (Stock Counts)
+  const sizeStatsTotal = ALL_SIZES.map(size => {
+    const n = normalProduct?.stock?.find((s: any) => s.size === size)?.quantity || 0;
+    const m = mourningProduct?.stock?.find((s: any) => s.size === size)?.quantity || 0;
+    return { size, count: n + m };
+  });
+
+  const sizeStatsNormal = ALL_SIZES.map(size => {
+    const n = normalProduct?.stock?.find((s: any) => s.size === size)?.quantity || 0;
+    return { size, count: n };
+  });
+
+  const sizeStatsMourning = ALL_SIZES.map(size => {
+    const m = mourningProduct?.stock?.find((s: any) => s.size === size)?.quantity || 0;
+    return { size, count: m };
+  });
+
+  // ส่งข้อมูลที่คำนวณเสร็จแล้วไปให้ Component แสดงผล
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className={styles.intro}>
-          <h1>To get started, edit the page.tsx file.</h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+    <HomeView 
+      salesStats={salesStats}
+      sizeStatsTotal={sizeStatsTotal}
+      sizeStatsNormal={sizeStatsNormal}
+      sizeStatsMourning={sizeStatsMourning}
+    />
   );
 }

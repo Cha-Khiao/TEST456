@@ -51,7 +51,7 @@ export default function ProductsView({ initialProducts }: ProductsViewProps) {
       return type; 
   };
 
-  // --- Filtering & Sorting Logic ---
+  // --- Filtering & Sorting Logic --
   const filteredProducts = useMemo(() => {
     return initialProducts.filter(product => {
       // 1. กรองตามชื่อ

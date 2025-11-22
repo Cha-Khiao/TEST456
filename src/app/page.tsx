@@ -1,14 +1,13 @@
 // src/app/page.tsx
 import HomeView from '@/components/HomeView';
 import API_ENDPOINTS from '@/lib/api';
-import { Product } from '@/types'; // ใช้ Type กลางที่เราสร้างไว้
+import { Product } from '@/types';
 
-// ไซส์ทั้งหมด (เรียงลำดับแล้ว)
 const ALL_SIZES = ['SSS', 'SS', 'S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL', '6XL', '7XL', '8XL', '9XL', '10XL'];
 
 async function getProducts(): Promise<Product[]> {
   try {
-    const res = await fetch(API_ENDPOINTS.PRODUCTS, { cache: 'no-store' }); // no-store เพื่อให้ได้ data ล่าสุดเสมอ
+    const res = await fetch(API_ENDPOINTS.PRODUCTS, { cache: 'no-store' });
     if (!res.ok) throw new Error('Failed to fetch products');
     return res.json();
   } catch (error) {
@@ -20,29 +19,45 @@ async function getProducts(): Promise<Product[]> {
 export default async function Home() {
   const products = await getProducts();
 
-  // --- เตรียมข้อมูลสินค้าแยกประเภท (ถ้าหาไม่เจอ จะได้ undefined ซึ่ง code รับมือได้) ---
-  const normalProducts = products.filter(p => p.type === 'normal');
-  const mourningProducts = products.filter(p => p.type === 'mourning');
+  // --- 1. คำนวณภาพรวมยอดจำหน่าย (Dashboard Stats) ---
+  let totalRevenue = 0;     // ยอดขายรวม (บาท)
+  let totalItemsSold = 0;   // จำนวนตัวที่ขายได้รวม
 
-  // 1. คำนวณยอดขายรวม (Sold) จากทุกสินค้าใน DB
-  const totalSold = products.reduce((sum, p) => {
-      return sum + (p.stock?.reduce((sSum, s) => sSum + (s.sold || 0), 0) || 0);
-  }, 0);
+  // --- 2. หาสินค้าขายดี (Best Seller) ---
+  let bestSeller = null;
+  let maxSold = -1;
 
-  const normalSold = normalProducts.reduce((sum, p) => sum + (p.stock?.reduce((sSum, s) => sSum + (s.sold || 0), 0) || 0), 0);
-  const mourningSold = mourningProducts.reduce((sum, p) => sum + (p.stock?.reduce((sSum, s) => sSum + (s.sold || 0), 0) || 0), 0);
-  
-  const salesStats = {
-    total: { sold: totalSold },
-    normal: { sold: normalSold },
-    mourning: { sold: mourningSold }
+  products.forEach(p => {
+      // นับยอดขายของสินค้านี้ (รวมทุกไซส์)
+      const soldCount = p.stock?.reduce((sum, s) => sum + (s.sold || 0), 0) || 0;
+      const revenue = soldCount * p.price;
+
+      // บวกเข้ายอดรวมทั้งหมด
+      totalItemsSold += soldCount;
+      totalRevenue += revenue;
+
+      // เช็คว่าเป็น Best Seller หรือไม่
+      if (soldCount > maxSold) {
+          maxSold = soldCount;
+          bestSeller = {
+              name: p.name,
+              price: p.price,
+              sold: soldCount,
+              revenue: revenue,
+              imageUrl: p.imageUrl
+          };
+      }
+  });
+
+  // ข้อมูลสถิติที่จะส่งไปหน้าบ้าน
+  const stats = {
+      overall: { revenue: totalRevenue, itemsSold: totalItemsSold },
+      bestSeller: bestSeller
   };
 
-  // 2. คำนวณสต็อกคงเหลือแยกไซส์ (รวมทุก Product ใน Type นั้นๆ)
-  // (สมมติว่าถ้ามีเสื้อปกติ 2 ลาย ไซส์ S จะถูกนำมาบวกกัน)
-  
+  // --- 3. คำนวณสต็อกคงเหลือรวมทุกไซส์ (Total Stock) ---
+  // (ไม่แยกสีแล้ว เอาแค่รวมพอ ตามที่ขอครับ)
   const sizeStatsTotal = ALL_SIZES.map(size => {
-    // วนลูปสินค้าทุกตัว เอา quantity ของไซส์นี้มาบวกกัน
     const count = products.reduce((sum, p) => {
         const found = p.stock?.find(s => s.size === size);
         return sum + (found ? found.quantity : 0);
@@ -50,30 +65,11 @@ export default async function Home() {
     return { size, count };
   });
 
-  const sizeStatsNormal = ALL_SIZES.map(size => {
-    const count = normalProducts.reduce((sum, p) => {
-        const found = p.stock?.find(s => s.size === size);
-        return sum + (found ? found.quantity : 0);
-    }, 0);
-    return { size, count };
-  });
-
-  const sizeStatsMourning = ALL_SIZES.map(size => {
-    const count = mourningProducts.reduce((sum, p) => {
-        const found = p.stock?.find(s => s.size === size);
-        return sum + (found ? found.quantity : 0);
-    }, 0);
-    return { size, count };
-  });
-
-  // ส่งข้อมูล products ตัวจริงไปด้วย เพื่อให้ HomeView เอาไป render Carousel
   return (
     <HomeView 
-      products={products} // ✅ ส่งสินค้าทั้งหมดไปให้ Carousel
-      salesStats={salesStats}
+      products={products}
+      stats={stats} // ✅ ส่งข้อมูลสถิติใหม่ไป
       sizeStatsTotal={sizeStatsTotal}
-      sizeStatsNormal={sizeStatsNormal}
-      sizeStatsMourning={sizeStatsMourning}
     />
   );
 }

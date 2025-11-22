@@ -4,26 +4,33 @@ import { NextResponse } from "next/server";
 
 export default withAuth(
   function middleware(req) {
-    // เช็คว่าเป็น Admin ไหม? (ในที่นี้สมมติว่าถ้า Login แล้วคือเข้าได้หมดไปก่อน)
-    // ถ้าคุณมี field 'role' ใน session สามารถเช็ค req.nextauth.token?.role === 'admin' ได้
-    
-    // ตัวอย่าง: ถ้าไม่ใช่ Admin ให้เด้งกลับไปหน้าแรก
-    // if (req.nextUrl.pathname.startsWith("/admin") && req.nextauth.token?.role !== "admin") {
-    //   return NextResponse.redirect(new URL("/", req.url));
-    // }
+    // เช็คสิทธิ์ Admin เฉพาะหน้าที่ขึ้นต้นด้วย /admin
+    if (req.nextUrl.pathname.startsWith("/admin")) {
+      const token = req.nextauth.token;
+      // @ts-ignore
+      if (token?.role !== "admin") {
+        return NextResponse.redirect(new URL("/", req.url)); 
+      }
+    }
   },
   {
     callbacks: {
-      // ต้อง Login ก่อนถึงจะผ่าน Middleware นี้ได้
-      authorized: ({ token }) => !!token,
+      authorized: ({ token }) => !!token, // ต้องมี Token ถึงจะผ่านได้
     },
   }
 );
 
 export const config = {
   matcher: [
-    "/dashboard/:path*",      // User Dashboard
-    "/order/create/:path*",   // สั่งซื้อ
-    "/payment/:path*",        // แจ้งโอน
+    // 🔒 ฝั่งลูกค้า (ต้อง Login)
+    "/dashboard/:path*",
+    "/order/:path*", 
+    "/orders/:path*",
+    
+    // 🔒 ฝั่ง Admin (ระบุเจาะจง เพื่อยกเว้น /admin/login)
+    "/admin/orders/:path*",
+    "/admin/products/:path*",
+    "/admin/stock/:path*",
+    // ❌ อย่าใส่ "/admin/:path*" แบบเหมาเข่ง เพราะมันจะล็อกหน้า login ด้วย
   ],
 };

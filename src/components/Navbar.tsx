@@ -5,33 +5,36 @@ import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Container, Navbar as BSNavbar, Nav, Dropdown, Button, Offcanvas, Badge } from 'react-bootstrap';
+import { Container, Navbar as BSNavbar, Dropdown, Button, Offcanvas, Badge } from 'react-bootstrap';
 import { 
   FaHistory, FaSignOutAlt, FaSignInAlt, 
-  FaStore, FaHome, FaBars, FaTimes, FaMoneyBillWave, FaChevronRight
+  FaStore, FaHome, FaBars, FaTimes, FaChevronRight,
+  FaShoppingCart, FaUserCircle
 } from 'react-icons/fa';
 import { useSession, signOut } from "next-auth/react";
+import { useCart } from '@/context/CartContext';
 
 export default function Navbar() {
   const pathname = usePathname();
   const { data: session } = useSession();
+  const { cartCount } = useCart();
+  
   const [scrolled, setScrolled] = useState(false);
   const [showMobile, setShowMobile] = useState(false);
   
   const isLoggedIn = !!session;
-  const userImage = session?.user?.image;
-
-  // 🛠️ แก้ไข Logic ชื่อตรงนี้:
-  // 1. ถ้ามี ID (เบอร์โทร) ให้ใช้เบอร์โทรเป็นชื่อเลย
-  // 2. ถ้าไม่มี ให้ใช้ชื่อ User ถ้าไม่มีอีก ให้ใช้ "User"
-  // @ts-ignore
-  const userId = session?.user?.id; // เบอร์โทรที่เราฝากไว้ใน id
   
+  // @ts-ignore
+  const role = session?.user?.role || 'user';
   let displayName = "User";
-  // 👇 ลบ Logic ซับซ้อนเดิมออก แล้วใช้แบบนี้แทนครับ
   if (session?.user?.name) {
-      displayName = session.user.name; // จะเป็นเบอร์โทร หรือ ชื่อ Google อัตโนมัติ
+      displayName = session.user.name;
   }
+
+  // ✅ Logic รูปโปรไฟล์:
+  // 1. ถ้ามีรูปจริง (Google) ให้ใช้รูปนั้น
+  // 2. ถ้าไม่มี (Login เบอร์โทร) ให้เจนรูปการ์ตูนจาก DiceBear โดยใช้เบอร์โทรเป็น Seed
+  const userImage = session?.user?.image || `https://api.dicebear.com/9.x/notionists/svg?seed=${displayName}&backgroundColor=c0aede,d1d4f9,b6e3f4,ffd5dc,ffdfbf`;
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -39,69 +42,51 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  if (pathname === '/auth/login') return null;
+  if (pathname === '/auth/login' || pathname === '/admin/login') return null;
   const handleClose = () => setShowMobile(false);
 
   return (
     <>
       <style jsx global>{`
-        /* CSS เดิมของ Floating Navbar (คงไว้) */
         .nav-floating {
-          position: fixed;
-          top: 20px;
-          left: 50%;
-          transform: translateX(-50%);
-          width: 95%;
-          max-width: 1200px;
-          z-index: 1030;
-          border-radius: 16px;
-          transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+          position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+          width: 95%; max-width: 1200px; z-index: 1030;
+          border-radius: 16px; transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
           background: rgba(255, 255, 255, 0.85);
-          backdrop-filter: blur(12px);
-          -webkit-backdrop-filter: blur(12px);
+          backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
           border: 1px solid rgba(255, 255, 255, 0.6);
           box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
         }
         .nav-floating.scrolled {
-          top: 10px;
-          background: rgba(255, 255, 255, 0.95);
+          top: 10px; background: rgba(255, 255, 255, 0.95);
           box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
-          padding-top: 0.5rem !important;
-          padding-bottom: 0.5rem !important;
+          padding-top: 0.5rem !important; padding-bottom: 0.5rem !important;
         }
         .nav-link-custom {
-          font-weight: 500;
-          color: #475569 !important;
-          padding: 0.5rem 1rem !important;
-          border-radius: 12px;
-          transition: all 0.2s;
-          margin: 0 2px;
+          font-weight: 500; color: #475569 !important; padding: 0.5rem 1rem !important;
+          border-radius: 12px; transition: all 0.2s; margin: 0 2px;
         }
-        .nav-link-custom:hover {
-          color: #4F46E5 !important;
-          background: rgba(79, 70, 229, 0.06);
+        .nav-link-custom:hover { color: #4F46E5 !important; background: rgba(79, 70, 229, 0.06); }
+        .nav-link-custom.active { color: #4F46E5 !important; background: rgba(79, 70, 229, 0.1); font-weight: 600; }
+        
+        .animate-slide-down { animation: slideDown 0.3s ease forwards; transform-origin: top right; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+        .mobile-menu-link {
+          display: flex; align-items: center; justify-content: space-between;
+          padding: 1rem; border-radius: 12px;
+          color: #334155; text-decoration: none; font-weight: 600;
+          background: #f8fafc; margin-bottom: 0.5rem; transition: all 0.2s;
         }
-        .nav-link-custom.active {
-          color: #4F46E5 !important;
-          background: rgba(79, 70, 229, 0.1);
-          font-weight: 600;
-        }
-        .profile-toggle {
-          transition: all 0.2s;
-          border: 1px solid transparent;
-        }
-        .profile-toggle:hover {
-          background: rgba(0,0,0,0.03);
-          border-color: rgba(0,0,0,0.05);
-        }
+        .mobile-menu-link:active { transform: scale(0.98); }
+        .mobile-menu-link.active { background: #eef2ff; color: #4F46E5; border: 1px solid #e0e7ff; }
+        
+        .dropdown-item-custom:hover { background-color: #f8fafc; transform: translateX(5px); }
+        .dropdown-item-custom { transition: all 0.2s ease; }
       `}</style>
 
-      <BSNavbar 
-        expand="lg" 
-        className={`nav-floating py-3 ${scrolled ? 'scrolled' : ''}`}
-      >
+      <BSNavbar expand="lg" className={`nav-floating py-3 ${scrolled ? 'scrolled' : ''}`}>
         <Container>
-          
           {/* Logo */}
           <BSNavbar.Brand as={Link} href="/" className="d-flex align-items-center gap-2 z-2">
               <div className="d-flex position-relative">
@@ -118,7 +103,7 @@ export default function Navbar() {
               </div>
           </BSNavbar.Brand>
 
-          {/* Center Menu (Hidden if not logged in) */}
+          {/* Center Menu */}
           <div className="d-none d-lg-flex position-absolute start-50 translate-middle-x">
              {isLoggedIn && (
                <div className="d-flex gap-1 bg-secondary bg-opacity-10 p-1 rounded-4">
@@ -138,40 +123,89 @@ export default function Navbar() {
           {/* Right Side */}
           <div className="d-flex align-items-center gap-2 z-2 ms-auto">
             
+            {isLoggedIn && (
+                <Link href="/cart" className="position-relative btn btn-light rounded-circle shadow-sm me-1 d-none d-lg-flex" style={{width: 42, height: 42, alignItems: 'center', justifyContent: 'center'}}>
+                    <FaShoppingCart className="text-primary" size={18}/>
+                    {cartCount > 0 && (
+                        <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-2 border-white" style={{fontSize: '0.6rem'}}>
+                        {cartCount}
+                        </span>
+                    )}
+                </Link>
+            )}
+
             {isLoggedIn ? (
               <Dropdown align="end">
-                <Dropdown.Toggle as="div" className="profile-toggle d-flex align-items-center gap-2 cursor-pointer p-1 pe-3 rounded-pill" style={{cursor: 'pointer'}}>
-                   <div className="position-relative">
-                      {userImage ? (
-                        <Image src={userImage} alt="Profile" width={36} height={36} className="rounded-circle border" />
-                      ) : (
-                        <div className="bg-gradient-primary text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm" 
-                             style={{width:36, height:36, background: 'linear-gradient(135deg, #6f6af8, #a855f7)'}}>
-                           {/* ใช้อักษรตัวแรกของชื่อที่แก้แล้ว */}
-                           <span className="fw-bold small">{displayName.charAt(0).toUpperCase()}</span>
-                        </div>
-                      )}
-                      <span className="position-absolute bottom-0 end-0 bg-success border border-2 border-white rounded-circle" style={{width:10, height:10}}></span>
-                   </div>
-                   <div className="d-none d-md-block text-start" style={{lineHeight: '1.1'}}>
-                      {/* แสดงชื่อ User หรือ เบอร์โทร */}
-                      <span className="fw-bold text-dark d-block" style={{fontSize: '0.85rem'}}>{displayName}</span>
-                      <span className="text-muted" style={{fontSize: '0.65rem'}}>สมาชิกทั่วไป</span>
+                <Dropdown.Toggle as="div" className="cursor-pointer" style={{border: 'none', background: 'transparent'}}>
+                   <div className="d-flex align-items-center gap-2 p-1 pe-3 rounded-pill hover-bg-light transition-all border border-transparent hover-border-light">
+                       <div className="position-relative">
+                          {/* ✅ แสดงรูปโปรไฟล์ที่เจนมา หรือรูปจาก Google */}
+                          <Image src={userImage} alt="Profile" width={38} height={38} className="rounded-circle border shadow-sm" unoptimized />
+                          <span className="position-absolute bottom-0 end-0 bg-success border border-2 border-white rounded-circle" style={{width:10, height:10}}></span>
+                       </div>
+                       <div className="d-none d-md-block text-start lh-1">
+                          <span className="fw-bold text-dark d-block" style={{fontSize: '0.85rem', maxWidth: '80px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>{displayName}</span>
+                          <span className="text-muted" style={{fontSize: '0.65rem'}}>{role === 'admin' ? 'Admin' : 'Member'}</span>
+                       </div>
                    </div>
                 </Dropdown.Toggle>
 
-                <Dropdown.Menu className="border-0 shadow-lg rounded-4 mt-3 p-2 animate-slide-down" style={{minWidth: '200px'}}>
-                   <div className="px-3 py-2 bg-light rounded-3 mb-2">
-                      <small className="text-muted d-block" style={{fontSize: '0.7rem'}}>เข้าสู่ระบบแล้ว</small>
-                      <div className="fw-bold text-truncate text-primary">{displayName}</div>
+                <Dropdown.Menu className="border-0 shadow-lg rounded-4 mt-3 p-0 overflow-hidden animate-slide-down" style={{minWidth: '280px'}}>
+                   
+                   {/* Header Gradient */}
+                   <div className="p-4 text-center text-white position-relative" style={{background: 'linear-gradient(135deg, #4F46E5, #7c3aed)'}}>
+                        <div className="position-absolute top-0 start-0 w-100 h-100 bg-white opacity-10" style={{backgroundImage: 'radial-gradient(circle, #ffffff 1px, transparent 1px)', backgroundSize: '10px 10px'}}></div>
+                        
+                        <div className="position-relative z-1">
+                            <div className="d-inline-block p-1 bg-white bg-opacity-25 rounded-circle mb-2">
+                                {/* ✅ รูปโปรไฟล์ใน Dropdown */}
+                                <Image src={userImage} alt="Profile" width={60} height={60} className="rounded-circle border border-2 border-white" unoptimized />
+                            </div>
+                            <h6 className="fw-bold mb-0">{displayName}</h6>
+                            <Badge bg="light" text="dark" className="fw-normal mt-1 opacity-75">{role === 'admin' ? 'Administrator' : 'สมาชิกทั่วไป'}</Badge>
+                        </div>
                    </div>
-                   <Dropdown.Item as={Link} href="/dashboard" className="rounded-3 py-2 d-flex align-items-center gap-2">
-                      <FaHistory className="text-secondary"/> ประวัติการสั่งซื้อ
-                   </Dropdown.Item>
-                   <Dropdown.Divider className="my-1"/>
-                   <Dropdown.Item onClick={() => signOut({callbackUrl: '/'})} className="rounded-3 py-2 text-danger d-flex align-items-center gap-2">
-                      <FaSignOutAlt /> ออกจากระบบ
-                   </Dropdown.Item>
+
+                   {/* Body */}
+                   <div className="p-3 bg-white">
+                       <div className="d-grid gap-2">
+                           <Link href="/dashboard" className="text-decoration-none">
+                               <button className="btn btn-light w-100 text-start d-flex align-items-center gap-3 py-2 rounded-3 dropdown-item-custom border-0">
+                                   <div className="bg-primary text-white p-2 rounded-circle shadow-sm" style={{width: 35, height: 35, display: 'flex', alignItems:'center', justifyContent:'center'}}>
+                                       <FaHistory size={14}/>
+                                   </div>
+                                   <div>
+                                       <span className="d-block fw-bold text-dark" style={{fontSize: '0.9rem'}}>ประวัติการสั่งซื้อ</span>
+                                       <small className="text-muted" style={{fontSize: '0.7rem'}}>ติดตามสถานะพัสดุ</small>
+                                   </div>
+                               </button>
+                           </Link>
+                           
+                           {/* ปุ่มสำหรับ Admin */}
+                           {role === 'admin' && (
+                               <Link href="/admin/orders" className="text-decoration-none">
+                                   <button className="btn btn-light w-100 text-start d-flex align-items-center gap-3 py-2 rounded-3 dropdown-item-custom border-0">
+                                       <div className="bg-warning text-dark p-2 rounded-circle shadow-sm" style={{width: 35, height: 35, display: 'flex', alignItems:'center', justifyContent:'center'}}>
+                                           <FaUserCircle size={14}/>
+                                       </div>
+                                       <div>
+                                           <span className="d-block fw-bold text-dark" style={{fontSize: '0.9rem'}}>จัดการหลังบ้าน</span>
+                                           <small className="text-muted" style={{fontSize: '0.7rem'}}>Admin Console</small>
+                                       </div>
+                                   </button>
+                               </Link>
+                           )}
+                       </div>
+
+                       <hr className="my-3 border-secondary opacity-10"/>
+                       
+                       <button 
+                           onClick={() => signOut({callbackUrl: '/'})} 
+                           className="btn btn-danger w-100 border-0 py-2 fw-bold d-flex align-items-center justify-content-center gap-2 rounded-3 shadow-sm hover-lift"
+                       >
+                           <FaSignOutAlt/> ออกจากระบบ
+                       </button>
+                   </div>
                 </Dropdown.Menu>
               </Dropdown>
             ) : (
@@ -188,6 +222,7 @@ export default function Navbar() {
             {/* Mobile Hamburger */}
             <Button variant="light" className="d-lg-none rounded-circle p-2 text-secondary bg-light border-0" onClick={() => setShowMobile(true)}>
                <FaBars size={20}/>
+               {isLoggedIn && cartCount > 0 && <span className="position-absolute top-0 end-0 bg-danger rounded-circle" style={{width: 8, height: 8, marginTop: 8, marginRight: 8}}></span>}
             </Button>
 
           </div>
@@ -196,29 +231,51 @@ export default function Navbar() {
 
       {/* Mobile Offcanvas */}
       <Offcanvas show={showMobile} onHide={handleClose} placement="end" className="border-0 rounded-start-4" style={{maxWidth: '85vw'}}>
-        <Offcanvas.Header className="justify-content-between p-4 border-bottom">
-          <div className="d-flex align-items-center gap-2">
-             <span className="fw-bold fs-5 text-primary">เมนูหลัก</span>
-          </div>
-          <Button variant="light" onClick={handleClose} className="rounded-circle p-2 text-secondary">
-             <FaTimes size={20}/>
+        <Offcanvas.Header className="justify-content-between p-4 border-bottom bg-light">
+          {isLoggedIn ? (
+              <div className="d-flex align-items-center gap-3">
+                  <div className="bg-white rounded-circle p-1 shadow-sm border">
+                      {/* ✅ รูปโปรไฟล์ Mobile */}
+                      <Image src={userImage} alt="User" width={40} height={40} className="rounded-circle" unoptimized/>
+                  </div>
+                  <div>
+                      <h6 className="fw-bold mb-0 text-dark">{displayName}</h6>
+                      <small className="text-muted">{role === 'admin' ? 'Admin' : 'Member'}</small>
+                  </div>
+              </div>
+          ) : (
+              <span className="fw-bold fs-5 text-primary">เมนูหลัก</span>
+          )}
+          <Button variant="light" onClick={handleClose} className="rounded-circle p-2 text-secondary bg-white shadow-sm">
+             <FaTimes size={18}/>
           </Button>
         </Offcanvas.Header>
         
-        <Offcanvas.Body className="px-4 pt-3 d-flex flex-column h-100">
+        <Offcanvas.Body className="px-4 pt-4 d-flex flex-column h-100">
+            
+            {isLoggedIn && (
+                <Link href="/cart" onClick={handleClose} className={`mobile-menu-link mb-4 ${pathname === '/cart' ? 'active' : ''}`}>
+                    <div className="d-flex align-items-center gap-3">
+                        <div className="position-relative">
+                            <FaShoppingCart className="text-secondary"/>
+                            {cartCount > 0 && <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger p-1" style={{fontSize: '0.5rem'}}>{cartCount}</span>}
+                        </div>
+                        ตะกร้าสินค้า
+                    </div>
+                    <FaChevronRight size={12} className="opacity-25"/>
+                </Link>
+            )}
+
            {isLoggedIn ? (
              <div className="d-flex flex-column gap-2 mb-auto">
                 <Link href="/" onClick={handleClose} className={`mobile-menu-link ${pathname === '/' ? 'active' : ''}`}>
                    <div className="d-flex align-items-center gap-3"><FaHome className="text-secondary"/> หน้าแรก</div>
-                   <FaChevronRight size={12} className="opacity-25"/>
                 </Link>
                 <Link href="/products" onClick={handleClose} className={`mobile-menu-link ${pathname.startsWith('/products') ? 'active' : ''}`}>
                    <div className="d-flex align-items-center gap-3"><FaStore className="text-secondary"/> เลือกซื้อสินค้า</div>
-                   <FaChevronRight size={12} className="opacity-25"/>
                 </Link>
                 <Link href="/dashboard" onClick={handleClose} className={`mobile-menu-link ${pathname.startsWith('/dashboard') ? 'active' : ''}`}>
                    <div className="d-flex align-items-center gap-3"><FaHistory className="text-secondary"/> ประวัติการสั่งซื้อ</div>
-                   <Badge bg="danger" pill>New</Badge>
                 </Link>
              </div>
            ) : (
@@ -230,7 +287,10 @@ export default function Navbar() {
 
            <div className="pb-4 mt-4 border-top pt-4">
               {isLoggedIn ? (
-                <Button variant="outline-danger" onClick={() => signOut({callbackUrl: '/'})} className="w-100 py-3 rounded-4 fw-bold d-flex align-items-center justify-content-center gap-2">
+                <Button 
+                    className="w-100 py-3 rounded-4 fw-bold d-flex align-items-center justify-content-center gap-2 btn-danger text-white shadow-sm"
+                    onClick={() => signOut({callbackUrl: '/'})}
+                >
                    <FaSignOutAlt /> ออกจากระบบ
                 </Button>
               ) : (
@@ -243,17 +303,6 @@ export default function Navbar() {
            </div>
         </Offcanvas.Body>
       </Offcanvas>
-
-      <style jsx global>{`
-        .mobile-menu-link {
-          display: flex; align-items: center; justify-content: space-between;
-          padding: 1rem; border-radius: 12px;
-          color: #334155; text-decoration: none; font-weight: 600;
-          background: #f8fafc; margin-bottom: 0.5rem; transition: all 0.2s;
-        }
-        .mobile-menu-link:active { transform: scale(0.98); }
-        .mobile-menu-link.active { background: #eef2ff; color: #4F46E5; border: 1px solid #e0e7ff; }
-      `}</style>
     </>
   );
 }

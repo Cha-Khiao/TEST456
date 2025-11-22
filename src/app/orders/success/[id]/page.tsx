@@ -1,30 +1,31 @@
 // src/app/order/success/[id]/page.tsx
 'use client';
 
+import { useSession } from "next-auth/react"; // ✅ 1. Import Session
 import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation'; // ใช้ useParams ใน Client Component
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Container, Row, Col, Card, Button, Spinner, Alert } from 'react-bootstrap';
 import { 
-  FaCheckCircle, FaCopy, FaFileInvoiceDollar, FaArrowRight, 
+  FaCheckCircle, FaCopy, FaFileInvoiceDollar, 
   FaHome, FaLine, FaFacebook 
 } from 'react-icons/fa';
 import API_ENDPOINTS from '@/lib/api';
 
-// Bank Info Configuration
 const BANK_INFO = {
   bankName: 'ธนาคารกรุงเทพ (Bangkok Bank)',
   accName: 'บจ. ประชารัฐรักสามัคคีศรีสะเกษ (วิสาหกิจเพื่อสังคม)',
   accNo: '333-4-23368-5',
   branch: 'สาขาศรีสะเกษ',
-  logo: '/images/bank_logos/bbl.svg' // ตรวจสอบว่ามีไฟล์นี้ หรือเปลี่ยนเป็น text
+  logo: '/images/bank_logos/bbl.svg'
 };
 
 const primaryColorHex = '#4F46E5'; 
 
 export default function OrderSuccessPage() {
-  const { id } = useParams(); // รับ Order ID จาก URL
+  const { data: session } = useSession(); // ✅ 2. เรียกใช้ Session
+  const { id } = useParams();
   const router = useRouter();
   
   const [order, setOrder] = useState<any>(null);
@@ -32,14 +33,28 @@ export default function OrderSuccessPage() {
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
-  // Fetch Order Data
   useEffect(() => {
     if (!id) return;
     
     const fetchOrder = async () => {
+      // ✅ 3. เช็ค Session ก่อน (ถ้ายังโหลดไม่เสร็จให้รอก่อน)
+      if (!session) return;
+
       try {
-        const res = await fetch(API_ENDPOINTS.ORDER_DETAILS(id as string));
-        if (!res.ok) throw new Error('ไม่พบข้อมูลคำสั่งซื้อ');
+        const res = await fetch(API_ENDPOINTS.ORDER_DETAILS(id as string), {
+            // ✅ 4. แนบ Token
+            headers: {
+                'Authorization': `Bearer ${(session as any)?.accessToken}`
+            }
+        });
+
+        if (!res.ok) {
+            if (res.status === 401 || res.status === 403) {
+                throw new Error('ไม่มีสิทธิ์เข้าถึงข้อมูล (Unauthorized)');
+            }
+            throw new Error('ไม่พบข้อมูลคำสั่งซื้อ');
+        }
+        
         const data = await res.json();
         setOrder(data);
       } catch (err: any) {
@@ -49,17 +64,17 @@ export default function OrderSuccessPage() {
       }
     };
 
-    fetchOrder();
-  }, [id]);
+    if (session) {
+        fetchOrder();
+    }
+  }, [id, session]); // เพิ่ม session ใน dependency
 
-  // Copy Account Number Function
   const handleCopy = () => {
     navigator.clipboard.writeText(BANK_INFO.accNo);
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000); // Reset after 2s
+    setTimeout(() => setCopied(false), 2000);
   };
 
-  // --- Render Loading ---
   if (loading) {
     return (
       <div className="d-flex flex-column justify-content-center align-items-center min-vh-100 bg-light">
@@ -69,12 +84,11 @@ export default function OrderSuccessPage() {
     );
   }
 
-  // --- Render Error ---
   if (error || !order) {
     return (
       <Container className="py-5 text-center">
         <Alert variant="danger" className="d-inline-block px-5 py-4 rounded-4 shadow-sm">
-           <h4 className="fw-bold mb-2">ไม่พบคำสั่งซื้อ</h4>
+           <h4 className="fw-bold mb-2">เกิดข้อผิดพลาด</h4>
            <p className="mb-4">{error || 'รหัสคำสั่งซื้อไม่ถูกต้อง'}</p>
            <Link href="/">
              <Button variant="outline-danger" className="rounded-pill px-4">กลับหน้าหลัก</Button>
@@ -85,7 +99,7 @@ export default function OrderSuccessPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', paddingBottom: '80px', backgroundColor: '#f8fafc' }}>
+    <div style={{ minHeight: '100vh', paddingBottom: '80px', paddingTop: '120px', backgroundColor: '#f8fafc' }}>
       
       {/* Success Header Animation */}
       <div className="text-center py-5 bg-white shadow-sm position-relative overflow-hidden">
@@ -115,7 +129,6 @@ export default function OrderSuccessPage() {
                     <div className="bg-light rounded-4 p-3 border border-2 mb-4">
                        <div className="d-flex align-items-center mb-3">
                           <div className="bg-white p-2 rounded-3 shadow-sm me-3 border" style={{width: 60, height: 60}}>
-                             {/* ถ้าไม่มีรูปโลโก้ ให้ใช้ Text แทนได้ */}
                              <div className="w-100 h-100 bg-primary rounded-circle d-flex align-items-center justify-content-center text-white fw-bold">
                                 BBL
                              </div>
@@ -159,7 +172,6 @@ export default function OrderSuccessPage() {
                  <Card.Body className="p-4 p-lg-5 d-flex flex-column justify-content-center">
                     <h4 className="fw-bold text-dark mb-4 text-center">ขั้นตอนต่อไป</h4>
                     
-                    {/* Step 1 */}
                     <div className="d-flex mb-4">
                        <div className="flex-shrink-0">
                           <div className="rounded-circle bg-light text-primary fw-bold d-flex align-items-center justify-content-center" style={{width: 40, height: 40, border: `2px solid ${primaryColorHex}`}}>1</div>
@@ -170,7 +182,6 @@ export default function OrderSuccessPage() {
                        </div>
                     </div>
 
-                    {/* Step 2 */}
                     <div className="d-flex mb-4">
                        <div className="flex-shrink-0">
                           <div className="rounded-circle bg-light text-primary fw-bold d-flex align-items-center justify-content-center" style={{width: 40, height: 40, border: `2px solid ${primaryColorHex}`}}>2</div>
@@ -183,7 +194,6 @@ export default function OrderSuccessPage() {
 
                     <hr className="my-4 opacity-10" />
 
-                    {/* Action Buttons */}
                     <Link href={`/payment/notify/${order._id}`} className="text-decoration-none mb-3">
                        <Button 
                          className="w-100 rounded-pill py-3 fw-bold shadow-lg btn-gradient-warning d-flex align-items-center justify-content-center fs-5"
@@ -209,7 +219,6 @@ export default function OrderSuccessPage() {
                        </div>
                     </div>
 
-                    {/* Social Contact */}
                     <div className="mt-4 text-center pt-3 border-top">
                        <small className="text-muted d-block mb-2">ติดปัญหาการใช้งาน?</small>
                        <div className="d-flex justify-content-center gap-3">
@@ -221,7 +230,6 @@ export default function OrderSuccessPage() {
                  </Card.Body>
               </Card>
            </Col>
-
         </Row>
       </Container>
     </div>

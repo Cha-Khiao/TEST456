@@ -26,6 +26,8 @@ interface Order {
   totalPrice: number;
   items: OrderItem[];
   createdAt: string;
+  customerName: string; // เพิ่ม field นี้เพื่อให้ TS ไม่ฟ้อง
+  phone: string;       // เพิ่ม field นี้
 }
 
 export default function DashboardPage() {
@@ -35,20 +37,28 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const fetchOrders = async () => {
-      // ถ้ายังไม่ Login ให้หยุด (เดี๋ยว Middleware จัดการดีดออกเอง)
-      if (!session?.user) {
-         setLoading(false);
-         return;
+      // ถ้ายังไม่ Login หรือไม่มี Token ให้หยุด
+      if (!session) {
+         return; // ยังไม่ set loading false รอจนกว่า session จะมา หรือดีดออก
       }
 
       // @ts-ignore
-      const userPhone = session.user.id; 
+      const userPhone = session.user.name; // ใช้ name (ที่เป็นเบอร์โทร) หรือ id ตาม logic ที่เราเก็บ
 
       try {
-        // ดึงข้อมูลตามเบอร์โทร
-        const res = await fetch(`${API_ENDPOINTS.ORDERS}?phone=${userPhone}`);
+        // ✅ แก้ไขจุดนี้: แนบ Token ไปกับ Header
+        const res = await fetch(`${API_ENDPOINTS.ORDERS}?phone=${userPhone}`, {
+            headers: {
+                'Authorization': `Bearer ${(session as any)?.accessToken}`
+            }
+        });
         
-        if (!res.ok) throw new Error('Failed to fetch orders');
+        if (!res.ok) {
+            // ถ้า 401/403 อาจจะ Token หมดอายุ
+            if (res.status === 401) console.error("Unauthorized");
+            throw new Error('Failed to fetch orders');
+        }
+
         const data = await res.json();
         setOrders(data);
       } catch (err: any) {
@@ -57,7 +67,10 @@ export default function DashboardPage() {
         setLoading(false);
       }
     };
-    fetchOrders();
+
+    if (session) {
+        fetchOrders();
+    }
   }, [session]);
 
   // --- Stats Calculation ---
@@ -84,7 +97,7 @@ export default function DashboardPage() {
       case 'verification': return <Badge bg="info" text="dark" className="px-3 py-2 rounded-pill border border-info bg-opacity-25 text-info-emphasis w-100 shadow-sm"><FaSearch className="me-1"/> รอตรวจสอบ</Badge>;
       case 'shipping': return <Badge bg="primary" className="px-3 py-2 rounded-pill border border-primary bg-opacity-25 text-primary-emphasis w-100 shadow-sm"><FaTruck className="me-1"/> กำลังจัดส่ง</Badge>;
       case 'completed': return <Badge bg="success" text="dark" className="px-3 py-2 rounded-pill border border-success bg-opacity-25 text-success-emphasis w-100 shadow-sm"><FaCheckCircle className="me-1"/> สำเร็จ</Badge>;
-      default: return <Badge bg="secondary" className="px-3 py-2 rounded-pill w-100 shadow-sm">ไม่ทราบ</Badge>;
+      default: return <Badge bg="secondary" className="px-3 py-2 rounded-pill w-100 shadow-sm">ยกเลิก/อื่นๆ</Badge>;
     }
   };
 
@@ -126,10 +139,8 @@ export default function DashboardPage() {
   }
 
   return (
-    // 🛠️ แก้ไขตรงนี้: ลบ backgroundColor ออก และเพิ่ม paddingTop ให้พ้น Navbar
     <div style={{ minHeight: '100vh', paddingBottom: '80px', paddingTop: '100px' }}>
       
-      {/* Ambient Background: ปรับ z-index ให้อยู่หลังสุด แต่หน้า Content */}
       <div className="position-absolute top-0 start-50 translate-middle-x" 
            style={{ width: '80%', height: '400px', background: `radial-gradient(circle, ${primaryColorHex}10 0%, transparent 70%)`, zIndex: -1, filter: 'blur(80px)', pointerEvents: 'none' }}>
       </div>
@@ -148,7 +159,7 @@ export default function DashboardPage() {
                 <p className="text-secondary ms-1 mb-0 small">จัดการรายการและตรวจสอบสถานะสินค้าของคุณ</p>
             </div>
             <div className="d-flex gap-2">
-                <Link href="/order/create">
+                <Link href="/orders/create">
                     <Button className="btn-gradient-primary rounded-pill px-4 fw-bold shadow-lg btn-sm d-flex align-items-center py-2">
                         <FaPlus className="me-2"/> สั่งซื้อเพิ่ม
                     </Button>
@@ -224,17 +235,17 @@ export default function DashboardPage() {
             <Card.Body className="p-0 bg-white">
                {totalOrders === 0 ? (
                   <div className="d-flex flex-column align-items-center justify-content-center py-5 my-5 text-center">
-                     <div className="mb-4 p-4 rounded-circle bg-light border border-dashed text-secondary opacity-25">
-                        <FaClipboardList size={50} />
-                     </div>
-                     <h5 className="fw-bold text-dark mb-1">ยังไม่มีประวัติการสั่งซื้อ</h5>
-                     <p className="text-muted mb-4 small">เมื่อคุณสั่งซื้อเสื้อแล้ว รายการจะแสดงที่นี่</p>
-                     <Link href="/order/create">
-                        <Button className="btn-gradient-primary rounded-pill px-4 fw-bold shadow-lg btn-sm">
-                           <FaPlus className="me-2"/> สั่งซื้อเสื้อเลย
-                        </Button>
-                     </Link>
-                  </div>
+                      <div className="mb-4 p-4 rounded-circle bg-light border border-dashed text-secondary opacity-25">
+                         <FaClipboardList size={50} />
+                      </div>
+                      <h5 className="fw-bold text-dark mb-1">ยังไม่มีประวัติการสั่งซื้อ</h5>
+                      <p className="text-muted mb-4 small">เมื่อคุณสั่งซื้อเสื้อแล้ว รายการจะแสดงที่นี่</p>
+                      <Link href="/orders/create">
+                         <Button className="btn-gradient-primary rounded-pill px-4 fw-bold shadow-lg btn-sm">
+                            <FaPlus className="me-2"/> สั่งซื้อเสื้อเลย
+                         </Button>
+                      </Link>
+                   </div>
                ) : (
                   <>
                     {/* Desktop Table */}

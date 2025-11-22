@@ -1,6 +1,7 @@
 // src/app/orders/details/[id]/page.tsx
 'use client';
 
+import { useSession } from "next-auth/react";
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
@@ -12,7 +13,6 @@ import {
 } from 'react-icons/fa';
 import API_ENDPOINTS from '@/lib/api';
 
-// --- Helper Functions ---
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString('th-TH', {
     year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
@@ -22,18 +22,25 @@ const formatDate = (dateString: string) => {
 const primaryColorHex = '#4F46E5';
 
 export default function OrderDetailsPage() {
+  const { data: session } = useSession();
   const { id } = useParams();
   const router = useRouter();
   
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [showSlip, setShowSlip] = useState(false); // For Modal
+  const [showSlip, setShowSlip] = useState(false);
 
   useEffect(() => {
-    if (!id) return;
+    if (!id || !session) return;
+
     const fetchOrder = async () => {
       try {
-        const res = await fetch(API_ENDPOINTS.ORDER_DETAILS(id as string));
+        const res = await fetch(API_ENDPOINTS.ORDER_DETAILS(id as string), {
+            headers: {
+                'Authorization': `Bearer ${(session as any)?.accessToken}`
+            }
+        });
+
         if (!res.ok) throw new Error('Failed to fetch order');
         const data = await res.json();
         setOrder(data);
@@ -44,7 +51,7 @@ export default function OrderDetailsPage() {
       }
     };
     fetchOrder();
-  }, [id]);
+  }, [id, session]);
 
   // --- Timeline Logic ---
   const getStepStatus = (stepIndex: number, currentStatus: string) => {
@@ -78,7 +85,7 @@ export default function OrderDetailsPage() {
         {/* Progress Line (Background) */}
         <div className="position-absolute top-50 start-0 w-100 bg-secondary bg-opacity-25 rounded-pill" style={{height: '4px', zIndex: 0}}></div>
         
-        {/* Progress Line (Active) - คำนวณความกว้างตาม Step */}
+        {/* Progress Line (Active) */}
         <div 
             className="position-absolute top-50 start-0 bg-primary rounded-pill transition-all" 
             style={{
@@ -121,7 +128,7 @@ export default function OrderDetailsPage() {
   if (!order) return <div className="min-vh-100 d-flex justify-content-center align-items-center">ไม่พบข้อมูล</div>;
 
   return (
-    <div style={{ minHeight: '100vh', paddingBottom: '80px', backgroundColor: '#f1f5f9' }}>
+    <div style={{ minHeight: '100vh', paddingBottom: '80px', paddingTop: '120px', backgroundColor: '#f1f5f9' }}>
       
       {/* Header Navbar */}
       <div className="bg-white shadow-sm py-3 mb-4 sticky-top" style={{top: 0, zIndex: 100}}>
@@ -171,9 +178,23 @@ export default function OrderDetailsPage() {
                     <Card.Body className="p-0">
                         {order.items.map((item: any, i: number) => (
                             <div key={i} className="d-flex p-3 border-bottom align-items-center">
-                                <div className="bg-light rounded-3 d-flex align-items-center justify-content-center me-3" style={{width: 60, height: 60}}>
-                                    <FaBoxOpen className="text-secondary opacity-50" size={24}/>
+                                
+                                {/* ✅ ส่วนที่แก้ไข: แสดงรูปภาพ (ถ้ามี) หรือแสดงไอคอน (ถ้าไม่มี) */}
+                                <div className="position-relative rounded-3 overflow-hidden border me-3 flex-shrink-0" style={{width: 60, height: 60}}>
+                                    {item.imageUrl ? (
+                                        <Image 
+                                            src={item.imageUrl} 
+                                            alt={item.productName} 
+                                            fill 
+                                            style={{objectFit: 'cover'}} 
+                                        />
+                                    ) : (
+                                        <div className="w-100 h-100 bg-light d-flex align-items-center justify-content-center">
+                                             <FaBoxOpen className="text-secondary opacity-50"/>
+                                        </div>
+                                    )}
                                 </div>
+
                                 <div className="flex-grow-1">
                                     <div className="fw-bold text-dark">{item.productName}</div>
                                     <div className="text-muted small">ไซส์: <Badge bg="light" text="dark" className="border">{item.size}</Badge> x {item.quantity} ตัว</div>
@@ -188,7 +209,7 @@ export default function OrderDetailsPage() {
                         <div className="p-3 bg-light bg-opacity-50">
                             <div className="d-flex justify-content-between mb-2 small">
                                 <span className="text-secondary">ยอดรวมสินค้า</span>
-                                <span className="fw-bold">฿{(order.totalPrice - (order.isShipping ? (order.totalPrice >= 1000 ? 0 : 50) : 0)).toLocaleString()}</span> {/* Logic คร่าวๆ หรือใช้ field จริงถ้ามี */}
+                                <span className="fw-bold">฿{(order.totalPrice - (order.isShipping ? (order.totalPrice >= 1000 ? 0 : 50) : 0)).toLocaleString()}</span>
                             </div>
                             <div className="d-flex justify-content-between mb-2 small">
                                 <span className="text-secondary">ค่าจัดส่ง</span>

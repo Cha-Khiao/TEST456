@@ -1,6 +1,7 @@
 // src/components/ProductsView.tsx
 'use client';
 
+import { useSearchParams } from 'next/navigation';
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -20,6 +21,7 @@ const ITEMS_PER_PAGE = 12;
 
 export default function ProductsView({ initialProducts }: ProductsViewProps) {
   const { addToCart } = useCart();
+  const searchParams = useSearchParams();
   
   // --- Filter & Search State ---
   const [searchTerm, setSearchTerm] = useState('');
@@ -32,6 +34,23 @@ export default function ProductsView({ initialProducts }: ProductsViewProps) {
   const [showModal, setShowModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [quantities, setQuantities] = useState<Record<string, number>>({});
+
+  // ✅ 2. เพิ่ม Effect ดักจับ URL: ถ้ามี ?selected=... ให้เปิด Modal ทันที
+  useEffect(() => {
+    const selectedId = searchParams.get('selected');
+    if (selectedId) {
+        const productToOpen = initialProducts.find(p => p._id === selectedId);
+        if (productToOpen) {
+            // เปิด Modal ของสินค้านั้น
+            setSelectedProduct(productToOpen);
+            setQuantities({});
+            setShowModal(true);
+            
+            // (Optional) ล้าง URL ให้สะอาด เพื่อไม่ให้ Refresh แล้วเด้งอีก
+            // window.history.replaceState(null, '', '/products');
+        }
+    }
+  }, [searchParams, initialProducts]);
 
   // ✅ Reset Pagination เมื่อมีการค้นหาหรือเปลี่ยน Filter
   useEffect(() => {

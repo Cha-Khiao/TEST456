@@ -139,7 +139,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', paddingBottom: '80px', paddingTop: '100px' }}>
+    <div style={{ minHeight: '100vh', paddingBottom: '80px', paddingTop: '50px' }}>
       
       <div className="position-absolute top-0 start-50 translate-middle-x" 
            style={{ width: '80%', height: '400px', background: `radial-gradient(circle, ${primaryColorHex}10 0%, transparent 70%)`, zIndex: -1, filter: 'blur(80px)', pointerEvents: 'none' }}>

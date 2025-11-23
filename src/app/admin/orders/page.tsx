@@ -1,32 +1,31 @@
 // src/app/admin/orders/page.tsx
 'use client';
 
-import { useSession } from "next-auth/react"; // ✅ 1. Import Session
+import { useSession } from "next-auth/react";
 import { useState, useEffect } from 'react';
 import Link from 'next/link'; 
 import Image from 'next/image';
-import { Container, Card, Table, Badge, Button, Nav, Modal, Row, Col, Form, InputGroup } from 'react-bootstrap';
+import { Container, Card, Table, Badge, Button, Nav, Modal, Row, Col, Form, InputGroup, Spinner } from 'react-bootstrap';
 import { 
   FaBoxOpen, FaCheckCircle, FaClock, FaSearch, FaTruck, FaTimesCircle, 
-  FaEdit, FaFileInvoiceDollar
+  FaEdit, FaFileInvoiceDollar, FaMoneyBillWave, FaUser, FaMapMarkerAlt, FaPhone, FaTimes, FaChevronRight
 } from 'react-icons/fa';
 import API_ENDPOINTS from '@/lib/api';
 
+// Mapping สีและไอคอนสำหรับแต่ละสถานะ
 const statusMap: any = {
-  'pending_payment': { label: 'รอชำระเงิน', color: 'warning', icon: FaClock },
-  'verification': { label: 'รอตรวจสอบสลิป', color: 'info', icon: FaSearch },
-  'shipping': { label: 'กำลังจัดส่ง', color: 'primary', icon: FaTruck },
-  'completed': { label: 'สำเร็จ', color: 'success', icon: FaCheckCircle },
-  'cancelled': { label: 'ยกเลิก', color: 'secondary', icon: FaTimesCircle },
+  'pending_payment': { label: 'รอชำระเงิน', badgeClass: 'badge-status-warning', icon: FaClock, borderClass: 'border-status-warning', color: 'warning' },
+  'verification':    { label: 'รอตรวจสอบ', badgeClass: 'badge-status-info', icon: FaSearch, borderClass: 'border-status-info', color: 'info' },
+  'shipping':        { label: 'กำลังจัดส่ง', badgeClass: 'badge-status-primary', icon: FaTruck, borderClass: 'border-status-primary', color: 'primary' },
+  'completed':       { label: 'สำเร็จ', badgeClass: 'badge-status-success', icon: FaCheckCircle, borderClass: 'border-status-success', color: 'success' },
+  'cancelled':       { label: 'ยกเลิก', badgeClass: 'badge-status-secondary', icon: FaTimesCircle, borderClass: 'border-status-secondary', color: 'secondary' },
 };
 
 export default function AdminOrdersPage() {
-  const { data: session } = useSession(); // ✅ 2. เรียกใช้ Session
+  const { data: session } = useSession();
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('all');
-  
-  // State สำหรับค้นหา
   const [searchTerm, setSearchTerm] = useState('');
 
   const [showModal, setShowModal] = useState(false);
@@ -34,22 +33,17 @@ export default function AdminOrdersPage() {
   const [updating, setUpdating] = useState(false);
 
   useEffect(() => {
-    if (session) { // รอ session พร้อมก่อนค่อย fetch
+    if (session) {
         fetchOrders();
     }
   }, [session]);
 
   const fetchOrders = async () => {
     try {
-      // ✅ 3. แนบ Token (GET Orders ต้องเป็น Admin/User เท่านั้น)
       const res = await fetch(API_ENDPOINTS.ORDERS, {
-          headers: {
-             'Authorization': `Bearer ${(session as any)?.accessToken}`
-          }
+          headers: { 'Authorization': `Bearer ${(session as any)?.accessToken}` }
       }); 
-      
-      if (!res.ok) throw new Error("Unauthorized or Failed");
-      
+      if (!res.ok) throw new Error("Failed");
       const data = await res.json();
       setOrders(data);
     } catch (error) {
@@ -65,7 +59,6 @@ export default function AdminOrdersPage() {
     try {
         const res = await fetch(`${API_ENDPOINTS.ORDERS}/${selectedOrder._id}/status`, {
             method: 'PATCH',
-            // ✅ 4. แนบ Token (PATCH Status ต้องเป็น Admin)
             headers: { 
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${(session as any)?.accessToken}`
@@ -78,7 +71,11 @@ export default function AdminOrdersPage() {
         setOrders(orders.map(o => o._id === updatedOrder._id ? updatedOrder : o));
         setSelectedOrder(updatedOrder);
         
-        if (['shipping', 'completed'].includes(newStatus)) setShowModal(false);
+        // ให้ Modal ปิดเฉพาะตอนที่ออร์เดอร์เข้าสู่สถานะจัดส่ง/สำเร็จ/ยกเลิก
+        if (['shipping', 'completed', 'cancelled'].includes(newStatus)) {
+            // Delay เพื่อให้เห็นสถานะใหม่ใน Modal ก่อนปิด
+            setTimeout(() => setShowModal(false), 500); 
+        }
     } catch (error) {
         alert('Error updating status');
     } finally {
@@ -86,15 +83,13 @@ export default function AdminOrdersPage() {
     }
   };
 
-  // Logic การกรองข้อมูล (รวม Tab และ Search)
+  // Logic Filter
   const filteredOrders = orders.filter(o => {
-      // 1. กรองตาม Tab
       let statusMatch = true;
       if (activeTab === 'action_needed') statusMatch = ['verification'].includes(o.status);
       else if (activeTab === 'shipping') statusMatch = ['shipping'].includes(o.status);
       else if (activeTab !== 'all') statusMatch = o.status === activeTab;
 
-      // 2. กรองตามคำค้นหา (ชื่อ, เบอร์, รหัสออร์เดอร์)
       const searchLower = searchTerm.toLowerCase();
       const searchMatch = 
           o.customerName.toLowerCase().includes(searchLower) || 
@@ -104,154 +99,319 @@ export default function AdminOrdersPage() {
       return statusMatch && searchMatch;
   });
 
+  // Stats Calculation
+  const totalRevenue = orders.reduce((sum, o) => o.status !== 'cancelled' ? sum + o.totalPrice : sum, 0);
+  const pendingSlip = orders.filter(o => o.status === 'verification').length;
+
   return (
-    <Container>
+    <Container fluid className="px-4 py-4" style={{ backgroundColor: '#f1f5f9', minHeight: '100vh' }}>
+         
+         <div className="d-flex justify-content-between align-items-center mb-4">
+             <div>
+                <h4 className="fw-bold text-dark mb-0">จัดการคำสั่งซื้อ</h4>
+                <small className="text-muted">ภาพรวมและรายการสั่งซื้อทั้งหมด</small>
+             </div>
+             <Button variant="white" className="shadow-sm border rounded-pill px-4 fw-bold text-primary hover-scale" onClick={fetchOrders}>
+                 รีเฟรชข้อมูล
+             </Button>
+         </div>
+
          {/* Stats Cards */}
-         <Row className="g-3 mb-4">
+         <Row className="g-4 mb-4">
             <Col md={4}>
-                <Card className="border-0 shadow-sm h-100 bg-white border-start border-4 border-primary">
-                    <Card.Body className="d-flex justify-content-between align-items-center">
-                        <div><h3 className="fw-bold mb-0">{orders.length}</h3><small className="text-muted">คำสั่งซื้อทั้งหมด</small></div>
-                        <FaBoxOpen size={30} className="text-primary opacity-25"/>
+                <Card className="h-100 shadow-sm border-status-primary hover-card-up" style={{backgroundColor: '#ffffff'}}>
+                    <Card.Body className="d-flex align-items-center p-4">
+                        <div className="p-3 rounded-circle bg-primary bg-opacity-10 text-primary me-3">
+                            <FaBoxOpen size={24} />
+                        </div>
+                        <div>
+                            <small className="text-secondary text-uppercase fw-bold letter-spacing-1">คำสั่งซื้อทั้งหมด</small>
+                            <h2 className="fw-bold mb-0 text-dark">{orders.length}</h2>
+                        </div>
                     </Card.Body>
                 </Card>
             </Col>
             <Col md={4}>
-                <Card className="border-0 shadow-sm h-100 bg-white border-start border-4 border-warning">
-                    <Card.Body className="d-flex justify-content-between align-items-center">
-                        <div><h3 className="fw-bold mb-0">{orders.filter(o => o.status === 'verification').length}</h3><small className="text-muted">รอตรวจสอบสลิป</small></div>
-                        <FaSearch size={30} className="text-warning opacity-25"/>
+                <Card className="h-100 shadow-sm border-status-warning hover-card-up" style={{backgroundColor: '#ffffff'}}>
+                    <Card.Body className="d-flex align-items-center p-4">
+                        <div className="p-3 rounded-circle bg-warning bg-opacity-10 text-warning me-3">
+                            <FaSearch size={24} />
+                        </div>
+                        <div>
+                            <small className="text-secondary text-uppercase fw-bold letter-spacing-1">รอตรวจสอบสลิป</small>
+                            <h2 className="fw-bold mb-0 text-dark">{pendingSlip}</h2>
+                        </div>
                     </Card.Body>
                 </Card>
             </Col>
             <Col md={4}>
-                <Card className="border-0 shadow-sm h-100 bg-white border-start border-4 border-success">
-                    <Card.Body className="d-flex justify-content-between align-items-center">
-                        <div><h3 className="fw-bold mb-0">฿{orders.reduce((sum, o) => o.status !== 'cancelled' ? sum + o.totalPrice : sum, 0).toLocaleString()}</h3><small className="text-muted">ยอดขายรวม</small></div>
-                        <FaFileInvoiceDollar size={30} className="text-success opacity-25"/>
+                <Card className="h-100 shadow-sm border-status-success hover-card-up" style={{backgroundColor: '#ffffff'}}>
+                    <Card.Body className="d-flex align-items-center p-4">
+                        <div className="p-3 rounded-circle bg-success bg-opacity-10 text-success me-3">
+                            <FaMoneyBillWave size={24} />
+                        </div>
+                        <div>
+                            <small className="text-secondary text-uppercase fw-bold letter-spacing-1">ยอดขายรวม</small>
+                            <h2 className="fw-bold mb-0 text-dark">฿{totalRevenue.toLocaleString()}</h2>
+                        </div>
                     </Card.Body>
                 </Card>
             </Col>
          </Row>
 
-         {/* Orders Table & Search */}
-         <Card className="border-0 shadow-sm rounded-4 overflow-hidden">
-            <Card.Header className="bg-white border-bottom-0 pt-4 px-4 pb-0">
-                <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-3">
-                    <Nav variant="tabs" className="border-bottom-0 gap-2">
-                        <Nav.Item><Nav.Link active={activeTab === 'all'} onClick={() => setActiveTab('all')} className="text-dark fw-bold">ทั้งหมด <Badge bg="secondary" pill>{orders.length}</Badge></Nav.Link></Nav.Item>
-                        <Nav.Item><Nav.Link active={activeTab === 'action_needed'} onClick={() => setActiveTab('action_needed')} className={activeTab === 'action_needed' ? 'text-info fw-bold' : 'text-secondary'}>⏳ ตรวจสลิป <Badge bg="info" text="dark" pill>{orders.filter(o => o.status === 'verification').length}</Badge></Nav.Link></Nav.Item>
-                        <Nav.Item><Nav.Link active={activeTab === 'shipping'} onClick={() => setActiveTab('shipping')} className={activeTab === 'shipping' ? 'text-primary fw-bold' : 'text-secondary'}>🚚 ต้องจัดส่ง <Badge bg="primary" pill>{orders.filter(o => o.status === 'shipping').length}</Badge></Nav.Link></Nav.Item>
-                    </Nav>
-                    
-                    {/* Search Box */}
-                    <InputGroup style={{maxWidth: '300px'}}>
-                        <InputGroup.Text className="bg-white border-end-0"><FaSearch className="text-muted"/></InputGroup.Text>
-                        <Form.Control 
-                            placeholder="ค้นหา ชื่อ / เบอร์ / รหัส..." 
-                            className="border-start-0 ps-0"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                    </InputGroup>
-                </div>
+         {/* 2. Orders Table Card */}
+         <Card className="shadow-sm border-status-primary overflow-hidden">
+            <Card.Header className="bg-white border-bottom pt-4 px-4 pb-3">
+                <Row className="g-3 align-items-center">
+                    <Col lg={8}>
+                        <Nav className="nav-pills-custom gap-2">
+                            <Nav.Item><Nav.Link active={activeTab === 'all'} onClick={() => setActiveTab('all')}>ทั้งหมด</Nav.Link></Nav.Item>
+                            <Nav.Item><Nav.Link active={activeTab === 'action_needed'} onClick={() => setActiveTab('action_needed')}>⏳ ตรวจสลิป {pendingSlip > 0 && <Badge bg="danger" pill className="ms-1">{pendingSlip}</Badge>}</Nav.Link></Nav.Item>
+                            <Nav.Item><Nav.Link active={activeTab === 'shipping'} onClick={() => setActiveTab('shipping')}>🚚 ต้องส่ง</Nav.Link></Nav.Item>
+                            <Nav.Item><Nav.Link active={activeTab === 'completed'} onClick={() => setActiveTab('completed')}>สำเร็จ</Nav.Link></Nav.Item>
+                        </Nav>
+                    </Col>
+                    <Col lg={4}>
+                        <InputGroup className="shadow-sm rounded-pill overflow-hidden border" style={{borderColor: '#e2e8f0'}}>
+                            <InputGroup.Text className="bg-white border-0 ps-3"><FaSearch className="text-muted"/></InputGroup.Text>
+                            <Form.Control 
+                                placeholder="ค้นหาออร์เดอร์..." 
+                                className="bg-white border-0 ps-2 py-2 shadow-none"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                        </InputGroup>
+                    </Col>
+                </Row>
             </Card.Header>
             
-            <Card.Body className="p-0">
-                <div className="table-responsive">
-                    <Table hover className="align-middle mb-0" style={{minWidth: '900px'}}>
-                        <thead className="bg-light text-secondary">
-                            <tr>
-                                <th className="ps-4 py-3">Order ID</th>
-                                <th>ลูกค้า</th>
-                                <th>สินค้า</th>
-                                <th>ยอดเงิน</th>
-                                <th>สลิป</th>
-                                <th>สถานะ</th>
-                                <th className="text-end pe-4">จัดการ</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {loading ? (<tr><td colSpan={7} className="text-center py-5">Loading...</td></tr>) : 
-                             filteredOrders.length === 0 ? (<tr><td colSpan={7} className="text-center py-5 text-muted">ไม่พบข้อมูลคำสั่งซื้อ</td></tr>) :
-                             filteredOrders.map(order => (
-                                <tr key={order._id}>
-                                    <td className="ps-4">
-                                        <span className="fw-bold text-primary d-block">#{order._id.slice(-6).toUpperCase()}</span>
-                                        <small className="text-muted" style={{fontSize: '0.65rem'}}>{order._id}</small>
-                                    </td>
-                                    <td>
-                                        <div className="fw-bold">{order.customerName}</div>
-                                        <small className="text-muted"><i className="fas fa-phone-alt"></i> {order.phone}</small>
-                                    </td>
-                                    <td><small>{order.items.length} รายการ</small></td>
-                                    <td className="fw-bold">฿{order.totalPrice.toLocaleString()}</td>
-                                    <td>{order.paymentProofUrl ? <Badge bg="success">มีสลิป</Badge> : <Badge bg="secondary" className="opacity-50">รอโอน</Badge>}</td>
-                                    <td><Badge bg={statusMap[order.status]?.color || 'secondary'}>{statusMap[order.status]?.label}</Badge></td>
-                                    <td className="text-end pe-4">
-                                        <Button size="sm" variant="outline-dark" className="rounded-pill px-3" onClick={() => { setSelectedOrder(order); setShowModal(true); }}>
-                                            <FaEdit className="me-1"/> จัดการ
-                                        </Button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </Table>
-                </div>
-            </Card.Body>
+            <div className="table-responsive">
+                <Table hover striped className="align-middle mb-0" style={{minWidth: '1000px'}}>
+                    <thead className="bg-light text-secondary">
+                        <tr className="text-center align-middle" style={{ height: '50px' }}>
+                            <th className="py-3">Order Info</th>
+                            <th>ลูกค้า</th>
+                            <th>รายการสินค้า</th>
+                            <th>ยอดรวม</th>
+                            <th>หลักฐาน</th>
+                            <th>สถานะ</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {loading ? (
+                            <tr><td colSpan={7} className="text-center py-5"><Spinner animation="border" variant="primary"/></td></tr>
+                        ) : filteredOrders.length === 0 ? (
+                            <tr><td colSpan={7} className="text-center py-5 text-muted">ไม่พบรายการคำสั่งซื้อ</td></tr>
+                        ) : (
+                            filteredOrders.map(order => {
+                                const statusInfo = statusMap[order.status] || statusMap['pending_payment'];
+                                return (
+                                    <tr key={order._id} className="text-center">
+                                        <td>
+                                            <div className="d-flex flex-column align-items-center">
+                                                <span className="fw-bold text-primary d-block font-monospace">#{order._id.slice(-6).toUpperCase()}</span>
+                                                <small className="text-muted">{new Date(order.createdAt).toLocaleDateString('th-TH')}</small>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div className="d-flex flex-column align-items-center">
+                                                <div className="fw-bold text-dark">{order.customerName}</div>
+                                                <small className="text-muted d-flex align-items-center gap-1"><FaPhone size={10}/> {order.phone}</small>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div className d-flex flex-column align-items-center>
+                                                <span className="badge bg-white text-dark border mb-1">{order.items.length} ชิ้น</span>
+                                                <div className="d-flex gap-1 justify-content-center">
+                                                    {order.items.slice(0, 3).map((item: any, i: number) => (
+                                                        <div key={i} className="position-relative border rounded-1 overflow-hidden bg-white" style={{width: 28, height: 28}}>
+                                                            {item.imageUrl && <Image src={item.imageUrl} alt="p" fill style={{objectFit: 'cover'}} />}
+                                                        </div>
+                                                    ))}
+                                                    {order.items.length > 3 && <span className="small text-muted">...</span>}
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div className="fw-bold text-dark">฿{order.totalPrice.toLocaleString()}</div>
+                                        </td>
+                                        <td>
+                                            {order.paymentProofUrl ? 
+                                                <Badge bg="success" className="bg-opacity-10 text-success border border-success fw-normal px-3 py-2 rounded-pill"><FaFileInvoiceDollar className="me-1"/> มีสลิป</Badge> : 
+                                                <Badge bg="secondary" className="bg-opacity-10 text-secondary border border-secondary fw-normal px-3 py-2 rounded-pill"><FaClock className="me-1"/> รอโอน</Badge>
+                                            }
+                                        </td>
+                                        <td>
+                                            <span className={`badge ${statusInfo.badgeClass} px-3 py-2 rounded-pill d-inline-flex align-items-center`}>
+                                                <statusInfo.icon className="me-1"/> {statusInfo.label}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <Button variant="light" size="sm" className="rounded-pill px-3 border hover-scale text-primary fw-bold shadow-sm" onClick={() => { setSelectedOrder(order); setShowModal(true); }}>
+                                                <FaEdit className="me-1"/> จัดการ
+                                            </Button>
+                                        </td>
+                                    </tr>
+                                );
+                            })
+                        )}
+                    </tbody>
+                </Table>
+            </div>
+            <Card.Footer className="bg-white border-top-0 py-3 text-center">
+                <small className="text-muted">แสดงข้อมูล {filteredOrders.length} รายการล่าสุด</small>
+            </Card.Footer>
          </Card>
 
-        {/* Management Modal */}
-        <Modal show={showModal} onHide={() => setShowModal(false)} size="lg" centered>
-            <Modal.Header closeButton><Modal.Title>จัดการคำสั่งซื้อ #{selectedOrder?._id.slice(-6).toUpperCase()}</Modal.Title></Modal.Header>
-            <Modal.Body className="bg-light">
+        {/* Management Modal (Redesigned Split View) */}
+        <Modal show={showModal} onHide={() => setShowModal(false)} size="xl" centered contentClassName="bg-light border-0">
+            {/* Header Bar Dynamic Color */}
+            <div className={`w-100 ${statusMap[selectedOrder?.status]?.borderClass || 'border-status-secondary'}`} style={{ height: '6px', background: statusMap[selectedOrder?.status]?.color }}></div>
+
+            <Modal.Header closeButton className="bg-white border-bottom-0 pb-3 mx-4 mt-3 shadow-sm rounded-4">
+                <Modal.Title className="fw-bold text-dark">
+                    จัดการคำสั่งซื้อ <span className="text-primary font-monospace">#{selectedOrder?._id.slice(-6).toUpperCase()}</span>
+                </Modal.Title>
+            </Modal.Header>
+            <Modal.Body className="px-4 pb-4">
                 {selectedOrder && (
                     <Row className="g-4">
-                        <Col md={6}>
-                            <Card className="border-0 shadow-sm h-100">
-                                <Card.Header className="bg-white fw-bold">หลักฐานการโอนเงิน</Card.Header>
-                                <Card.Body className="text-center d-flex align-items-center justify-content-center bg-dark bg-opacity-10" style={{minHeight: '300px'}}>
+                        
+                        {/* LEFT: Slip Image & Customer Info (Audit View) */}
+                        <Col lg={5} className="d-flex flex-column gap-4">
+                            
+                            {/* Customer Info Card */}
+                            <Card className="shadow-sm border-status-info hover-card-up">
+                                <Card.Header className="fw-bold bg-white"><FaUser className="text-info me-2"/>ข้อมูลผู้สั่งซื้อ</Card.Header>
+                                <Card.Body>
+                                    <Row className="g-3">
+                                        <Col sm={12}>
+                                            <div className="bg-light p-2 rounded border">
+                                                <small className="text-muted d-block">ชื่อลูกค้า</small> 
+                                                <strong className="text-dark">{selectedOrder.customerName}</strong>
+                                            </div>
+                                        </Col>
+                                        <Col sm={6}>
+                                            <div className="p-2 bg-light rounded border">
+                                                <small className="text-muted d-block">เบอร์โทร</small> 
+                                                <strong className="text-dark">{selectedOrder.phone}</strong>
+                                            </div>
+                                        </Col>
+                                        <Col sm={6}>
+                                            <div className="p-2 bg-light rounded border">
+                                                <small className="text-muted d-block">วันที่สั่ง</small> 
+                                                <strong className="text-dark">{new Date(selectedOrder.createdAt).toLocaleDateString('th-TH')}</strong>
+                                            </div>
+                                        </Col>
+                                        <Col sm={12}>
+                                            <div className="p-2 bg-light rounded border d-flex align-items-start gap-2">
+                                                <FaMapMarkerAlt className="text-danger mt-1 flex-shrink-0"/>
+                                                <div>
+                                                    <small className="text-muted d-block">ที่อยู่จัดส่ง</small> 
+                                                    <strong className="text-dark">{selectedOrder.address || 'รับด้วยตนเอง'}</strong>
+                                                </div>
+                                            </div>
+                                        </Col>
+                                    </Row>
+                                </Card.Body>
+                            </Card>
+
+                            {/* Slip Image Card */}
+                            <Card className="shadow-sm border-status-success flex-grow-1 overflow-hidden">
+                                <Card.Header className="fw-bold bg-white"><FaFileInvoiceDollar className="text-success me-2"/>หลักฐานการโอน</Card.Header>
+                                <Card.Body className="d-flex align-items-center justify-content-center p-0 bg-dark bg-opacity-10">
                                     {selectedOrder.paymentProofUrl ? (
-                                        <div className="position-relative w-100" style={{height: '400px'}}>
-                                            <Image src={selectedOrder.paymentProofUrl} alt="Slip" fill style={{objectFit: 'contain'}} className="rounded"/>
+                                        <div className="position-relative w-100 h-100" style={{minHeight: '300px'}}>
+                                            <Image src={selectedOrder.paymentProofUrl} alt="Slip" fill style={{objectFit: 'contain'}} className="p-2"/>
                                         </div>
-                                    ) : <div className="text-muted"><FaFileInvoiceDollar size={40} className="mb-2 opacity-50"/><p>ไม่มีสลิป</p></div>}
+                                    ) : (
+                                        <div className="text-center text-muted opacity-50">
+                                            <FaFileInvoiceDollar size={50} className="mb-3"/>
+                                            <h5>ลูกค้ายังไม่แนบสลิป</h5>
+                                        </div>
+                                    )}
                                 </Card.Body>
                             </Card>
                         </Col>
-                        <Col md={6}>
-                            <Card className="border-0 shadow-sm mb-3">
-                                <Card.Body>
-                                    <h6 className="fw-bold">ข้อมูลจัดส่ง</h6>
-                                    <p className="mb-1"><span className="text-muted">ชื่อ:</span> {selectedOrder.customerName}</p>
-                                    <p className="mb-1"><span className="text-muted">โทร:</span> {selectedOrder.phone}</p>
-                                    <p className="mb-0 bg-light p-2 rounded small border">{selectedOrder.address || 'รับเอง'}</p>
-                                </Card.Body>
-                            </Card>
-                            <Card className="border-0 shadow-sm">
-                                <Card.Body>
-                                    <h6 className="fw-bold mb-3">อัปเดตสถานะ</h6>
-                                    <div className="d-grid gap-2">
-                                        {selectedOrder.status === 'verification' && (
-                                            <>
-                                                <Button variant="success" onClick={() => handleUpdateStatus('shipping')} disabled={updating}><FaCheckCircle className="me-2"/> สลิปถูกต้อง (เริ่มจัดส่ง)</Button>
-                                                <Button variant="outline-danger" onClick={() => handleUpdateStatus('pending_payment')} disabled={updating}><FaTimesCircle className="me-2"/> สลิปไม่ผ่าน (ให้โอนใหม่)</Button>
-                                            </>
-                                        )}
-                                        {selectedOrder.status === 'shipping' && (
-                                            <Button variant="primary" onClick={() => handleUpdateStatus('completed')} disabled={updating}><FaTruck className="me-2"/> จัดส่งสำเร็จ (ปิดงาน)</Button>
-                                        )}
-                                        <hr/>
-                                        <Form.Select size="sm" value={selectedOrder.status} onChange={(e) => handleUpdateStatus(e.target.value)} disabled={updating}>
-                                            <option value="pending_payment">รอชำระเงิน</option>
-                                            <option value="verification">รอตรวจสอบ</option>
-                                            <option value="shipping">กำลังจัดส่ง</option>
-                                            <option value="completed">สำเร็จ</option>
-                                            <option value="cancelled">ยกเลิก</option>
-                                        </Form.Select>
-                                    </div>
-                                </Card.Body>
-                            </Card>
+
+                        {/* RIGHT: Items & Actions */}
+                        <Col lg={7}>
+                            <div className="d-flex flex-column h-100 gap-4">
+                                
+                                {/* Total & Action Summary Card */}
+                                <Card className="shadow-sm border-status-warning hover-card-up">
+                                    <Card.Body className="bg-white">
+                                        <div className="d-flex justify-content-between align-items-center mb-3">
+                                            <div className="d-flex flex-column">
+                                                <span className="fw-bold text-dark">ยอดรวมสุทธิ</span>
+                                                <span className="fw-bolder text-primary fs-3">฿{selectedOrder.totalPrice.toLocaleString()}</span>
+                                            </div>
+                                            <Badge bg={statusMap[selectedOrder.status]?.color} className="px-3 py-2 fs-6 rounded-pill">
+                                                {statusMap[selectedOrder.status]?.label}
+                                            </Badge>
+                                        </div>
+
+                                        {/* Verification & Action Buttons */}
+                                        <div className="d-grid gap-2 border-top pt-3">
+                                            {selectedOrder.status === 'verification' && (
+                                                <div className="d-flex gap-2">
+                                                    <Button variant="success" className="w-100 py-2 fw-bold shadow-sm" onClick={() => handleUpdateStatus('shipping')} disabled={updating}>
+                                                        <FaCheckCircle className="me-2"/> ยืนยันสลิปถูกต้อง
+                                                    </Button>
+                                                    <Button variant="outline-danger" className="w-100 py-2 fw-bold shadow-sm" onClick={() => handleUpdateStatus('pending_payment')} disabled={updating}>
+                                                        <FaTimesCircle className="me-2"/> สลิปไม่ผ่าน
+                                                    </Button>
+                                                </div>
+                                            )}
+                                            
+                                            {selectedOrder.status === 'shipping' && (
+                                                <Button variant="primary" className="w-100 py-2 fw-bold shadow-sm" onClick={() => handleUpdateStatus('completed')} disabled={updating}>
+                                                    <FaTruck className="me-2"/> บันทึกการจัดส่งสำเร็จ
+                                                </Button>
+                                            )}
+
+                                            {/* Manual Status Change */}
+                                            <InputGroup size="sm" className="mt-2">
+                                                <InputGroup.Text className="bg-light border-0">เปลี่ยนสถานะเอง</InputGroup.Text>
+                                                <Form.Select value={selectedOrder.status} onChange={(e) => handleUpdateStatus(e.target.value)} disabled={updating} className="fw-bold text-dark border-0 shadow-none bg-light">
+                                                    <option value="pending_payment">รอชำระเงิน</option>
+                                                    <option value="verification">รอตรวจสอบ</option>
+                                                    <option value="shipping">กำลังจัดส่ง</option>
+                                                    <option value="completed">สำเร็จ</option>
+                                                    <option value="cancelled">ยกเลิก</option>
+                                                </Form.Select>
+                                            </InputGroup>
+                                        </div>
+                                    </Card.Body>
+                                </Card>
+
+                                {/* Items List (Cleaner View) */}
+                                <Card className="shadow-sm border-status-secondary flex-grow-1 overflow-hidden">
+                                    <Card.Header className="bg-white fw-bold"><FaBoxOpen className="text-secondary me-2"/>รายการสินค้า ({selectedOrder.items.length})</Card.Header>
+                                    <Card.Body className="p-0">
+                                        <div className="overflow-auto" style={{maxHeight: '400px'}}>
+                                            {selectedOrder.items.map((item:any, idx:number) => (
+                                                <div key={idx} className="d-flex justify-content-between align-items-center p-3 border-bottom hover-bg-light">
+                                                    <div className="d-flex align-items-center">
+                                                        <div className="bg-light p-1 rounded me-3 shadow-sm border" style={{width:40, height:40}}>
+                                                            {item.imageUrl && <Image src={item.imageUrl} alt="item" width={30} height={30} style={{objectFit:'cover'}} />}
+                                                        </div>
+                                                        <div className="text-start">
+                                                            <div className="fw-bold text-dark">{item.productName}</div>
+                                                            <small className="text-muted">Size: {item.size} x {item.quantity}</small>
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-end fw-bold text-dark">
+                                                        ฿{(item.price * item.quantity).toLocaleString()}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </Card.Body>
+                                </Card>
+
+                            </div>
                         </Col>
                     </Row>
                 )}

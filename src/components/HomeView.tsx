@@ -108,7 +108,7 @@ export default function HomeView({ products, stats, sizeStatsTotal }: HomeViewPr
                   รายได้สมทบทุนจัดกิจกรรมสร้างสรรค์เพื่อบ้านเกิดของเรา
                 </p>
                 <div className="d-flex gap-3 justify-content-lg-start hero-buttons-mobile-center">
-                  <Link href="/order/create" className="btn btn-primary btn-lg fw-bold px-4 shadow d-inline-flex align-items-center hover-lift">
+                  <Link href="/products" className="btn btn-primary btn-lg fw-bold px-4 shadow d-inline-flex align-items-center hover-lift">
                     <FaShoppingCart className="me-2" /> สั่งซื้อเลย
                   </Link>
                 </div>
@@ -180,7 +180,9 @@ export default function HomeView({ products, stats, sizeStatsTotal }: HomeViewPr
                                         <FaTruck /> <span>ค่าส่งเริ่มต้น 50.-</span>
                                     </div>
                                   </div>
-                                  <Link href={`/order/create?type=${product.type}`} className={`btn ${bgColor} text-white w-100 py-3 fs-5 shadow-lg d-inline-flex justify-content-center align-items-center text-decoration-none rounded-4 hover-lift`} style={{transition: 'all 0.3s ease'}}>
+                                  <Link href={`/products?selected=${product._id}`} 
+                                    className={`btn ${bgColor} text-white w-100 py-3 fs-5 shadow-lg d-inline-flex justify-content-center align-items-center text-decoration-none rounded-4 hover-lift`} 
+                                    style={{transition: 'all 0.3s ease'}}>
                                     <FaShoppingCart className="me-2"/> สั่งซื้อทันที
                                   </Link>
                               </Col>

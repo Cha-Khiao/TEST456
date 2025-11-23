@@ -1,20 +1,20 @@
 // src/app/payment/notify/[id]/page.tsx
 'use client';
 
-import { useSession } from "next-auth/react"; // ✅ 1. Import Session
+import { useSession } from "next-auth/react";
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Container, Row, Col, Card, Button, Form, Spinner, Alert, Badge } from 'react-bootstrap';
 import { 
   FaCloudUploadAlt, FaFileInvoiceDollar, FaCheckCircle, FaTimes, 
-  FaArrowLeft, FaImage, FaMoneyBillWave
+  FaArrowLeft, FaImage, FaReceipt, FaCamera
 } from 'react-icons/fa';
 import API_ENDPOINTS from '@/lib/api';
 
-const warningGradient = 'linear-gradient(45deg, #f59e0b, #d97706)';
+const warningGradient = 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)';
 
 export default function PaymentNotifyPage() {
-  const { data: session } = useSession(); // ✅ 2. เรียกใช้ Session
+  const { data: session } = useSession();
   const { id } = useParams();
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -27,14 +27,13 @@ export default function PaymentNotifyPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
-  // 1. Fetch Order Details
+  // --- LOGIC SECTION ---
   useEffect(() => {
-    if (!id || !session) return; // รอ Session
+    if (!id || !session) return;
 
     const fetchOrder = async () => {
       try {
         const res = await fetch(API_ENDPOINTS.ORDER_DETAILS(id as string), {
-            // ✅ 3. แนบ Token ตอนดึงข้อมูล
             headers: {
                 'Authorization': `Bearer ${(session as any)?.accessToken}`
             }
@@ -44,8 +43,11 @@ export default function PaymentNotifyPage() {
         const data = await res.json();
         
         if (data.status !== 'pending_payment') {
-           alert('ออร์เดอร์นี้แจ้งชำระเงินไปแล้ว หรือถูกยกเลิก');
-           router.push('/dashboard');
+           if (data.status === 'verification' || data.status === 'shipping' || data.status === 'completed') {
+               router.push(`/order/success/${id}`);
+           } else {
+               router.push('/dashboard');
+           }
            return;
         }
 
@@ -75,7 +77,6 @@ export default function PaymentNotifyPage() {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  // 2. Submit Upload
   const handleSubmit = async () => {
     if (!selectedFile || !id || !session) return;
 
@@ -89,7 +90,6 @@ export default function PaymentNotifyPage() {
     try {
       const res = await fetch(API_ENDPOINTS.UPLOAD_SLIP, {
         method: 'POST',
-        // ✅ 4. แนบ Token ตอนส่งรูป (ไม่ต้องใส่ Content-Type สำหรับ FormData)
         headers: {
             'Authorization': `Bearer ${(session as any)?.accessToken}`
         },
@@ -97,10 +97,8 @@ export default function PaymentNotifyPage() {
       });
 
       const data = await res.json();
-
       if (!res.ok) throw new Error(data.error || 'อัปโหลดไม่สำเร็จ');
 
-      alert('แจ้งชำระเงินเรียบร้อย ทางเราจะรีบตรวจสอบโดยเร็วที่สุด');
       router.push('/dashboard'); 
 
     } catch (err: any) {
@@ -111,87 +109,162 @@ export default function PaymentNotifyPage() {
     }
   };
 
-  if (loading) return <div className="text-center py-5"><Spinner animation="border" variant="warning"/></div>;
+  // --- UI SECTION ---
+
+  if (loading) {
+      return (
+        <div className="d-flex flex-column justify-content-center align-items-center min-vh-100 bg-white">
+          <Spinner animation="border" variant="warning" style={{width: '3rem', height: '3rem'}} />
+          <p className="mt-3 text-muted animate-pulse">กำลังตรวจสอบข้อมูล...</p>
+        </div>
+      );
+  }
+
   if (!order) return <div className="text-center py-5">ไม่พบข้อมูล</div>;
 
   return (
-    <div style={{ minHeight: '100vh', paddingBottom: '100px', paddingTop: '120px', backgroundColor: '#fffbeb' }}>
-      {/* ... (ส่วน UI เหมือนเดิม ไม่มีการเปลี่ยนแปลง) ... */}
-      <div className="py-5 text-center position-relative overflow-hidden bg-white shadow-sm">
-        <Container>
-           <h2 className="fw-bold text-dark mb-1">แจ้งชำระเงิน</h2>
-           <p className="text-muted">แนบหลักฐานการโอนเงินเพื่อยืนยันคำสั่งซื้อ</p>
-        </Container>
+    <div style={{ minHeight: '100vh', paddingBottom: '100px', backgroundColor: '#f4f7fe' }}>
+      
+      {/* 1. Full-Width Header */}
+      <div className="position-relative overflow-hidden pt-5 pb-5" 
+           style={{
+               background: 'linear-gradient(to bottom, #fff7ed, #f4f7fe)', 
+               borderBottomLeftRadius: '30px',
+               borderBottomRightRadius: '30px'
+           }}>
+         <div className="position-absolute top-0 start-0 translate-middle bg-warning opacity-10 rounded-circle animate-pulse" style={{width: '300px', height: '300px', filter: 'blur(60px)'}}></div>
+         <div className="position-absolute top-0 end-0 translate-middle bg-danger opacity-5 rounded-circle animate-pulse" style={{width: '250px', height: '250px', filter: 'blur(50px)', animationDelay: '1s'}}></div>
+         
+         <Container className="text-center position-relative z-1 pt-3 pb-5">
+            <div className="mb-3 d-inline-block">
+                <div className="rounded-circle bg-warning text-white d-flex align-items-center justify-content-center shadow-lg animate-bounce" 
+                     style={{width: 80, height: 80, margin: '0 auto', background: warningGradient, border: '4px solid white'}}>
+                    <FaFileInvoiceDollar size={35} />
+                </div>
+            </div>
+            <h1 className="fw-bold text-dark mb-2">แจ้งชำระเงิน</h1>
+            <p className="text-secondary mb-4 fs-5">แนบหลักฐานการโอนเงินเพื่อยืนยันคำสั่งซื้อ</p>
+         </Container>
       </div>
 
-      <Container className="mt-4">
-         <Row className="justify-content-center">
-            <Col md={8} lg={6}>
-               
-               <Card className="border-0 shadow-sm rounded-4 mb-4 overflow-hidden">
-                  <div className="p-3 d-flex justify-content-between align-items-center bg-light border-bottom">
-                     <span className="text-secondary fw-bold">รหัสสั่งซื้อ</span>
-                     <span className="fw-bold text-primary">#{order._id.slice(-6).toUpperCase()}</span>
-                  </div>
-                  <Card.Body className="p-4 text-center">
-                     <p className="text-secondary mb-1">ยอดที่ต้องชำระ</p>
-                     <h1 className="fw-bold display-4 text-dark mb-0">฿{order.totalPrice.toLocaleString()}</h1>
-                     
-                     <div className="mt-3 d-flex justify-content-center gap-2">
-                        <Badge bg="warning" text="dark" className="px-3 py-2 rounded-pill bg-opacity-25 text-warning-emphasis border border-warning">
-                           <FaMoneyBillWave className="me-1"/> รอการโอนเงิน
+      <Container className="mt-n5 position-relative z-2" style={{marginTop: '-5rem'}}>
+         <Row className="justify-content-center g-4">
+            
+            {/* 2. Left Card: Receipt Summary */}
+            <Col lg={5}>
+               {/* ✅ ใช้ class card-border-orange เพื่อให้ขอบแสดงผลถูกต้องตาม globals.css */}
+               <Card className="rounded-4 overflow-hidden h-100 hover-lift shadow-lg card-border-orange position-relative">
+                  
+                  {/* Header */}
+                  <div className="p-4 text-center text-white position-relative" 
+                       style={{background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'}}>
+                     <div className="position-relative z-1">
+                        <small className="text-uppercase fw-bold opacity-75 letter-spacing-2 fs-6">ยอดที่ต้องชำระ / Amount</small>
+                        <h1 className="fw-bold display-4 my-2">฿{order.totalPrice.toLocaleString()}</h1>
+                        <Badge bg="white" text="dark" className="rounded-pill px-3 py-2 shadow-sm text-warning-emphasis">
+                            <span className="blink-me me-1">●</span> รอแจ้งโอน
                         </Badge>
                      </div>
-                  </Card.Body>
-               </Card>
-
-               <Card className="border-0 shadow-lg rounded-4 overflow-hidden">
-                  <div className="p-3 text-center text-white" style={{background: warningGradient}}>
-                     <h5 className="fw-bold mb-0"><FaFileInvoiceDollar className="me-2"/> อัปโหลดสลิปโอนเงิน</h5>
+                     <div className="position-absolute bottom-0 start-0 translate-middle-x bg-white rounded-circle" style={{width: 20, height: 20, marginBottom: -10}}></div>
+                     <div className="position-absolute bottom-0 end-0 translate-middle-x bg-white rounded-circle" style={{width: 20, height: 20, marginBottom: -10, marginRight: -20}}></div>
                   </div>
+
+                  <Card.Body className="p-4 bg-white">
+                     <div className="bg-light rounded-3 p-3 mb-4 border border-dashed text-center animate-slide-up">
+                        <small className="text-muted d-block text-uppercase mb-1" style={{letterSpacing: '1px'}}>Order ID</small>
+                        <span className="fw-bold text-dark font-monospace fs-4">#{order._id.slice(-6).toUpperCase()}</span>
+                        <div className="mt-2 text-muted small">
+                           จำนวน {order.items?.length || 0} รายการ
+                        </div>
+                     </div>
+
+                     <div className="text-center animate-slide-up" style={{animationDelay: '0.1s'}}>
+                        <div className="d-inline-flex align-items-center gap-2 text-secondary bg-white border rounded-pill px-3 py-1 shadow-sm">
+                           <FaReceipt className="text-warning"/>
+                           <span className="small">กรุณาตรวจสอบยอดเงินก่อนโอน</span>
+                        </div>
+                     </div>
+                  </Card.Body>
+                  <div className="position-absolute bottom-0 start-0 w-100" style={{height: '6px', backgroundImage: 'linear-gradient(45deg, transparent 50%, #ffffff 50%), linear-gradient(-45deg, transparent 50%, #ffffff 50%)', backgroundSize: '12px 12px', backgroundRepeat: 'repeat-x', marginBottom: '0px'}}></div>
+               </Card>
+            </Col>
+
+            {/* 3. Right Card: Upload Form */}
+            <Col lg={5}>
+               {/* ✅ ใช้ class card-border-orange เช่นกันเพื่อให้เป็น Theme สีส้มทั้งหน้า */}
+               <Card className="rounded-4 overflow-hidden h-100 shadow-sm card-border-orange">
                   
                   <Card.Body className="p-4 p-lg-5">
-                     {error && <Alert variant="danger"><FaTimes className="me-2"/> {error}</Alert>}
+                     <h4 className="fw-bold text-dark mb-4">อัปโหลดสลิป</h4>
+
+                     {error && (
+                        <Alert variant="danger" className="border-0 shadow-sm rounded-3 mb-4 animate-slide-down">
+                            <div className="d-flex align-items-center gap-2">
+                                <FaTimes className="text-danger"/> 
+                                <span>{error}</span>
+                            </div>
+                        </Alert>
+                     )}
 
                      <Form>
                         <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="d-none"/>
 
+                        {/* Dropzone */}
                         <div 
-                           className={`upload-zone rounded-4 border-2 border-dashed p-4 text-center cursor-pointer transition-all ${previewUrl ? 'border-success bg-success bg-opacity-10' : 'border-secondary bg-light'}`}
-                           style={{minHeight: '250px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center'}}
+                           className={`upload-zone position-relative rounded-4 border-2 border-dashed p-4 text-center cursor-pointer transition-all ${previewUrl ? 'border-success bg-success bg-opacity-10' : 'border-warning bg-warning bg-opacity-10 hover-bg-warning-light'}`}
+                           style={{minHeight: '280px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', transition: 'all 0.3s ease'}}
                            onClick={() => !previewUrl && fileInputRef.current?.click()}
                         >
                            {previewUrl ? (
-                              <div className="position-relative w-100 h-100">
-                                 <div style={{maxHeight: '400px', overflow: 'hidden'}} className="rounded-3 shadow-sm">
-                                     <img src={previewUrl} alt="Slip Preview" style={{maxWidth: '100%', maxHeight: '300px', objectFit: 'contain'}} />
+                              <div className="position-relative w-100 h-100 animate-slide-up">
+                                 <div className="bg-white p-2 rounded-3 shadow-sm d-inline-block mx-auto mb-3">
+                                     <div style={{maxHeight: '200px', overflow: 'hidden'}} className="rounded-2">
+                                         <img src={previewUrl} alt="Slip Preview" style={{maxWidth: '100%', maxHeight: '200px', objectFit: 'contain'}} />
+                                     </div>
                                  </div>
-                                 <Button variant="danger" size="sm" className="position-absolute top-0 end-0 m-2 rounded-circle shadow" style={{width: 32, height: 32, padding: 0}} onClick={(e) => { e.stopPropagation(); handleClearFile(); }}>
-                                    <FaTimes />
-                                 </Button>
-                                 <p className="text-success fw-bold mt-3 mb-0"><FaCheckCircle className="me-1"/> รูปพร้อมส่งแล้ว</p>
+                                 <div>
+                                     <Button variant="light" size="sm" className="rounded-pill px-3 shadow-sm text-danger fw-bold hover-scale border" onClick={(e) => { e.stopPropagation(); handleClearFile(); }}>
+                                        <FaTimes className="me-1"/> ยกเลิกรูปนี้
+                                     </Button>
+                                 </div>
+                                 <p className="text-success fw-bold mt-2 mb-0 animate-pulse small"><FaCheckCircle className="me-1"/> รูปพร้อมส่งแล้ว</p>
                               </div>
                            ) : (
-                              <div className="opacity-50 hover-opacity-100 transition-all">
-                                 <FaCloudUploadAlt size={60} className="mb-3 text-secondary"/>
-                                 <h5 className="fw-bold text-dark">แตะเพื่อเลือกรูปสลิป</h5>
-                                 <p className="text-muted small">รองรับไฟล์ .jpg, .png (ไม่เกิน 5MB)</p>
-                                 <Button variant="outline-secondary" size="sm" className="rounded-pill px-3 mt-2 pointer-events-none"><FaImage className="me-1"/> เลือกจากอัลบั้ม</Button>
+                              <div className="opacity-75 hover-opacity-100 transition-all py-3">
+                                 <div className="mb-3 bg-white d-inline-flex p-3 rounded-circle shadow-sm text-warning animate-bounce">
+                                     <FaCloudUploadAlt size={32}/>
+                                 </div>
+                                 <h6 className="fw-bold text-dark mb-2">แตะเพื่ออัปโหลดสลิป</h6>
+                                 <p className="text-muted small mb-3">รองรับไฟล์ .jpg, .png</p>
+                                 
+                                 <div className="d-flex gap-2 justify-content-center">
+                                    <Badge bg="white" text="secondary" className="border shadow-sm py-2 px-3 fw-normal">
+                                        <FaImage className="me-1"/> เลือกรูป
+                                    </Badge>
+                                    <Badge bg="white" text="secondary" className="border shadow-sm py-2 px-3 fw-normal">
+                                        <FaCamera className="me-1"/> ถ่ายรูป
+                                    </Badge>
+                                 </div>
                               </div>
                            )}
                         </div>
 
-                        <Button 
-                          className="w-100 mt-4 py-3 rounded-pill fw-bold shadow-lg fs-5"
-                          style={{background: warningGradient, border: 'none'}}
-                          disabled={!selectedFile || uploading}
-                          onClick={handleSubmit}
-                        >
-                           {uploading ? <><Spinner animation="border" size="sm" className="me-2"/> กำลังอัปโหลด...</> : <><FaCheckCircle className="me-2"/> ยืนยันการโอนเงิน</>}
-                        </Button>
+                        {/* Submit Button */}
+                        <div className="mt-4 animate-slide-up" style={{animationDelay: '0.2s'}}>
+                            <Button 
+                            className="w-100 py-3 rounded-pill fw-bold shadow-lg fs-5 btn-gradient-warning border-0 hover-scale"
+                            style={{background: warningGradient}}
+                            disabled={!selectedFile || uploading}
+                            onClick={handleSubmit}
+                            >
+                            {uploading ? <><Spinner animation="border" size="sm" className="me-2"/> กำลังส่งข้อมูล...</> : <><FaCheckCircle className="me-2"/> ยืนยันการแจ้งโอน</>}
+                            </Button>
+                        </div>
 
                         <div className="text-center mt-3">
-                           <Button variant="link" className="text-secondary text-decoration-none" onClick={() => router.back()}><FaArrowLeft className="me-1"/> ย้อนกลับ</Button>
+                           <Button variant="light" className="text-secondary text-decoration-none rounded-pill px-4 hover-bg-light small" onClick={() => router.back()}>
+                               <FaArrowLeft className="me-1"/> ย้อนกลับ
+                           </Button>
                         </div>
 
                      </Form>

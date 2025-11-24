@@ -7,10 +7,11 @@
 [![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3-purple)](https://getbootstrap.com/)
 [![NextAuth.js](https://img.shields.io/badge/NextAuth.js-4.24-green)](https://next-auth.js.org/)
 
+---
+
 ## 🔌 Backend API
 เว็บไซต์นี้ทำงานร่วมกับ **sisaket-shirt-api** ซึ่งเป็น Backend ที่สร้างด้วย Node.js, Express, และ MongoDB
-**ดูโค้ดของ API: [https://github.com/Cha-Khiao/sisaket-shirt-api.git](https://github.com/Cha-Khiao/sisaket-shirt-api.git)**
----
+- ดูโค้ดของ API: [https://github.com/Cha-Khiao/sisaket-shirt-api.git](https://github.com/Cha-Khiao/sisaket-shirt-api.git)**
 
 ## 📋 สารบัญ
 

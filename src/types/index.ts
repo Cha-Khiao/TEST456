@@ -1,16 +1,11 @@
-// src/types/index.ts
-
-// =========================================
-// 👕 Product Types
-// =========================================
-
-export type ProductType = 'normal' | 'mourning';
+// Product Types
+export type ProductType = string;
 
 export interface ProductVariant {
   size: string;
   quantity: number;
   sold: number;
-  _id?: string; // บางที Mongoose แถม id มาให้ใน sub-document
+  _id?: string;
 }
 
 export interface Product {
@@ -22,14 +17,11 @@ export interface Product {
   imageUrl: string;
   stock: ProductVariant[];
   isActive: boolean;
-  createdAt: string; // รับจาก API จะเป็น string ISO8601
+  createdAt: string;
   updatedAt: string;
 }
 
-// =========================================
-// 📦 Order Types
-// =========================================
-
+// Order Types
 export type OrderStatus = 
   | 'pending_payment' 
   | 'verification' 
@@ -38,12 +30,13 @@ export type OrderStatus =
   | 'cancelled';
 
 export interface OrderItem {
-  productId: string; // เก็บเป็น ID string
+  productId: string;
   productName: string;
   size: string;
   quantity: number;
   price: number;
   _id?: string;
+  imageUrl?: string; 
 }
 
 export interface Order {
@@ -60,16 +53,15 @@ export interface Order {
   updatedAt: string;
 }
 
-// =========================================
-// 🛒 Cart Types (แถมให้สำหรับทำตะกร้าสินค้า)
-// =========================================
-
+// Cart Types
 export interface CartItem {
+  uniqueKey?: string;
   productId: string;
   name: string;
   price: number;
   size: string;
   quantity: number;
   imageUrl: string;
-  maxStock: number; // เอาไว้กัน User กดเกินจำนวนที่มีจริง
+  maxStock: number;
+  type?: string;
 }

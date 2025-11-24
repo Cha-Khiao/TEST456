@@ -1,4 +1,3 @@
-// src/components/ProductsView.tsx
 'use client';
 
 import { useSearchParams } from 'next/navigation';
@@ -35,24 +34,18 @@ export default function ProductsView({ initialProducts }: ProductsViewProps) {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [quantities, setQuantities] = useState<Record<string, number>>({});
 
-  // ✅ 2. เพิ่ม Effect ดักจับ URL: ถ้ามี ?selected=... ให้เปิด Modal ทันที
   useEffect(() => {
     const selectedId = searchParams.get('selected');
     if (selectedId) {
         const productToOpen = initialProducts.find(p => p._id === selectedId);
         if (productToOpen) {
-            // เปิด Modal ของสินค้านั้น
             setSelectedProduct(productToOpen);
             setQuantities({});
             setShowModal(true);
-            
-            // (Optional) ล้าง URL ให้สะอาด เพื่อไม่ให้ Refresh แล้วเด้งอีก
-            // window.history.replaceState(null, '', '/products');
         }
     }
   }, [searchParams, initialProducts]);
 
-  // ✅ Reset Pagination เมื่อมีการค้นหาหรือเปลี่ยน Filter
   useEffect(() => {
     setDisplayCount(ITEMS_PER_PAGE);
   }, [searchTerm, filterType]);
@@ -73,9 +66,9 @@ export default function ProductsView({ initialProducts }: ProductsViewProps) {
   // --- Filtering & Sorting Logic --
   const filteredProducts = useMemo(() => {
     return initialProducts.filter(product => {
-      // 1. กรองตามชื่อ
+      // กรองตามชื่อ
       const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
-      // 2. กรองตามประเภท
+      // กรองตามประเภท
       const matchesType = filterType === 'all' || product.type === filterType;
       
       return matchesSearch && matchesType;
@@ -83,7 +76,6 @@ export default function ProductsView({ initialProducts }: ProductsViewProps) {
   }, [initialProducts, searchTerm, filterType]);
 
   const sortedProducts = [...filteredProducts].sort((a, b) => {
-    // เอาแบบปกติขึ้นก่อน (หรือปรับตามความต้องการ)
     if (a.type === 'normal') return -1;
     if (b.type === 'normal') return 1;
     return 0;
@@ -153,7 +145,7 @@ export default function ProductsView({ initialProducts }: ProductsViewProps) {
 
       <Container>
         
-        {/* ✅ Search & Filter Section */}
+        {/* Search & Filter Section */}
         <div className="mb-4 d-flex justify-content-center">
             <div className="bg-white p-2 rounded-pill shadow-sm border d-flex flex-column flex-md-row gap-2" style={{maxWidth: '600px', width: '100%'}}>
                 {/* Search Input */}

@@ -1,4 +1,3 @@
-// src/app/layout.tsx
 import './globals.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import type { Metadata } from 'next';
@@ -30,7 +29,7 @@ export default function RootLayout({
     <html lang="th">
       <body className={`${sarabun.variable} font-sans d-flex flex-column min-vh-100`}>
         <Providers>
-          <CartProvider> {/* ✅ ครอบตรงนี้ (ภายใน Providers เดิม) */}
+          <CartProvider>
              <ClientLayout>
                 {children}
              </ClientLayout>

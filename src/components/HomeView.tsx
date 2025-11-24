@@ -1,4 +1,3 @@
-// src/components/HomeView.tsx
 'use client';
 
 import { useState } from 'react';
@@ -143,7 +142,7 @@ export default function HomeView({ products, stats, sizeStatsTotal }: HomeViewPr
 
       <Container className="pb-5">
         
-        {/* 1. Product Carousel Section */}
+        {/* Product Carousel Section */}
         <Row className="justify-content-center mb-5 mt-2">
             <Col xl={10}>
               <div className="product-carousel-wrapper"> 
@@ -197,16 +196,13 @@ export default function HomeView({ products, stats, sizeStatsTotal }: HomeViewPr
             </Col>
         </Row>
 
-        {/* 2. ภาพรวมยอดจำหน่าย (ธีมสีม่วงตามเดิม) */}
         <div className="mb-4">
            <Card className="shadow-sm rounded-4 overflow-hidden card-border-purple">
-             {/* Header สีม่วงตาม Theme เดิม */}
              <div className="card-header-gradient-purple p-3 px-4">
                 <h5 className="fw-bold mb-0 text-white d-flex align-items-center"><FaChartPie className="me-2"/> ภาพรวมยอดจำหน่าย (Real-time)</h5>
              </div>
              <Card.Body className="p-4">
                 <Row className="g-4">
-                   {/* กล่อง 1: ยอดรวมทั้งหมด (ปรับให้เป็นธีมม่วงอ่อน) */}
                    <Col lg={6}>
                       <div className="p-4 h-100 rounded-4 border border-2 border-primary bg-primary bg-opacity-10 d-flex flex-column justify-content-center align-items-center text-center position-relative overflow-hidden">
                          <div className="position-absolute top-0 end-0 opacity-10 p-3">
@@ -220,7 +216,7 @@ export default function HomeView({ products, stats, sizeStatsTotal }: HomeViewPr
                       </div>
                    </Col>
 
-                   {/* กล่อง 2: สินค้าขายดี (Best Seller) */}
+                   {/* (Best Seller) */}
                    <Col lg={6}>
                       <div className="p-4 bg-white rounded-4 h-100 border border-warning shadow-sm position-relative overflow-hidden">
                          <div className="position-absolute top-0 end-0 p-3 opacity-25">
@@ -257,9 +253,7 @@ export default function HomeView({ products, stats, sizeStatsTotal }: HomeViewPr
            </Card>
         </div>
 
-        {/* 3. ตารางไซส์ & สต็อก & จ่ายเงิน (Layout เดิม) */}
         <Row className="g-4 mb-5">
-           {/* Col Left: Size Chart */}
            <Col lg={6}>
               <Card className="shadow-sm rounded-4 overflow-hidden card-border-teal h-100">
                  <div className="card-header-gradient-teal p-3 px-4">
@@ -288,7 +282,7 @@ export default function HomeView({ products, stats, sizeStatsTotal }: HomeViewPr
               </Card>
            </Col>
 
-           {/* Col Right: Stock & Payment */}
+           {/* Stock & Payment */}
            <Col lg={6}>
               <div className="d-flex flex-column gap-4">
                   {/* Stock */}
@@ -321,20 +315,20 @@ export default function HomeView({ products, stats, sizeStatsTotal }: HomeViewPr
                            <div className="d-flex gap-3">
                                <div className="text-center">
                                   <div className="bg-white border rounded-3 p-1 mb-1 shadow-sm" style={{width: 60, height: 60}}>
-                                     <SmartImage src="/images/qrcode.png" alt="QR" type="qr" />
+                                     <SmartImage src="/images/comsci_sskru_line.png" alt="QR" type="qr" />
                                   </div>
                                   <small className="fw-bold text-success d-block" style={{fontSize: '0.7rem'}}><FaLine/> LINE</small>
                                </div>
                                <div className="text-center">
                                   <div className="bg-white border rounded-3 p-1 mb-1 shadow-sm" style={{width: 60, height: 60}}>
-                                     <SmartImage src="/images/qrcode.png" alt="QR" type="qr" />
+                                     <SmartImage src="/images/comsci_sskru_facebook.png" alt="QR" type="qr" />
                                   </div>
-                                  <small className="fw-bold text-primary d-block" style={{fontSize: '0.7rem'}}><FaFacebook/> Page</small>
+                                  <small className="fw-bold text-primary d-block" style={{fontSize: '0.7rem'}}><FaFacebook/> Facebook</small>
                                </div>
                            </div>
                            <div className="text-end">
                                <h6 className="fw-bold text-secondary mb-1">สอบถามเพิ่มเติม</h6>
-                               <a href="tel:0933581622" className="text-decoration-none text-dark fw-bold fs-5 d-block">093-358-1622</a>
+                               <a href="tel:0933581622" className="text-decoration-none text-dark fw-bold fs-5 d-block">012-345-6789</a>
                            </div>
                         </div>
                      </Card.Body>

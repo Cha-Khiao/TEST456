@@ -1,4 +1,3 @@
-// src/app/payment/notify/[id]/page.tsx
 'use client';
 
 import { useSession } from "next-auth/react";
@@ -125,7 +124,7 @@ export default function PaymentNotifyPage() {
   return (
     <div style={{ minHeight: '100vh', paddingBottom: '100px', backgroundColor: '#f4f7fe' }}>
       
-      {/* 1. Full-Width Header */}
+      {/* Full-Width Header */}
       <div className="position-relative overflow-hidden pt-5 pb-5" 
            style={{
                background: 'linear-gradient(to bottom, #fff7ed, #f4f7fe)', 
@@ -150,9 +149,8 @@ export default function PaymentNotifyPage() {
       <Container className="mt-n5 position-relative z-2" style={{marginTop: '-5rem'}}>
          <Row className="justify-content-center g-4">
             
-            {/* 2. Left Card: Receipt Summary */}
+            {/* Left Card: Receipt Summary */}
             <Col lg={5}>
-               {/* ✅ ใช้ class card-border-orange เพื่อให้ขอบแสดงผลถูกต้องตาม globals.css */}
                <Card className="rounded-4 overflow-hidden h-100 hover-lift shadow-lg card-border-orange position-relative">
                   
                   {/* Header */}
@@ -189,9 +187,8 @@ export default function PaymentNotifyPage() {
                </Card>
             </Col>
 
-            {/* 3. Right Card: Upload Form */}
+            {/* Right Card: Upload Form */}
             <Col lg={5}>
-               {/* ✅ ใช้ class card-border-orange เช่นกันเพื่อให้เป็น Theme สีส้มทั้งหน้า */}
                <Card className="rounded-4 overflow-hidden h-100 shadow-sm card-border-orange">
                   
                   <Card.Body className="p-4 p-lg-5">

@@ -1,4 +1,3 @@
-// src/app/api/auth/[...nextauth]/route.ts
 import NextAuth, { AuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
@@ -34,14 +33,13 @@ export const authOptions: AuthOptions = {
             throw new Error(user.error || "เข้าสู่ระบบไม่สำเร็จ");
           }
 
-          // ✅ จุดที่ 1: รับ Token จาก Backend (user.token) มาตั้งชื่อใหม่ว่า accessToken
           if (user.token) {
             return {
               id: user.id,
               name: user.name,
               email: null,
               role: user.role,
-              accessToken: user.token, // 👈 สำคัญมาก! ต้องเก็บตรงนี้
+              accessToken: user.token,
             };
           }
           
@@ -57,16 +55,14 @@ export const authOptions: AuthOptions = {
     signIn: '/auth/login', 
   },
   callbacks: {
-    // ✅ จุดที่ 2: เอา accessToken ยัดใส่ JWT Token
     async jwt({ token, user }: any) {
       if (user) {
         token.role = user.role;
         token.id = user.id;
-        token.accessToken = user.accessToken; // 👈 รับช่วงต่อมา
+        token.accessToken = user.accessToken;
       }
       return token;
     },
-    // ✅ จุดที่ 3: เอา accessToken จาก JWT ยัดใส่ Session (เพื่อให้หน้าเว็บเรียกใช้ได้)
     async session({ session, token }: any) {
       if (session.user) {
         // @ts-ignore
@@ -74,7 +70,7 @@ export const authOptions: AuthOptions = {
         // @ts-ignore
         session.user.id = token.id;
         // @ts-ignore
-        session.accessToken = token.accessToken; // 👈 ส่งไม้ต่อให้ Frontend
+        session.accessToken = token.accessToken;
       }
       return session;
     }

@@ -1,4 +1,3 @@
-// src/components/Footer.tsx
 'use client';
 
 import { useSession } from "next-auth/react";
@@ -11,7 +10,6 @@ export default function Footer() {
   const { status } = useSession();
   const router = useRouter();
 
-  // ฟังก์ชันเช็ค Login ก่อนเปลี่ยนหน้า
   const handleProtectedLink = (e: React.MouseEvent, path: string) => {
     e.preventDefault(); 
     if (status === 'authenticated') {
@@ -28,11 +26,11 @@ export default function Footer() {
           <Col lg={4} md={6}>
             <h5 className="fw-bold text-white mb-3 d-flex align-items-center gap-2">
                 <span className="bg-primary rounded-circle d-inline-block" style={{width: 10, height: 10}}></span>
-                YEC SISAKET
+                ComSci SSKRU
             </h5>
             <p className="text-white-50 small" style={{lineHeight: '1.8'}}>
-              กลุ่มผู้ประกอบการรุ่นใหม่หอการค้าจังหวัดศรีสะเกษ (YEC) <br/>
-              มุ่งมั่นพัฒนาเศรษฐกิจและสังคมบ้านเกิด
+              สาขาวิทยาการคอมพิวเตอร์ (COMSCI) <br/>
+              มหาวิทยาลัยราชภัฏศรีสะเกษ
             </p>
           </Col>
           
@@ -43,7 +41,6 @@ export default function Footer() {
                     <Link href="/" className="text-decoration-none text-white-50 hover-text-white transition-all">หน้าแรก</Link>
                 </li>
                 <li>
-                    {/* ✅ แก้ไขตรงนี้: ใช้ handleProtectedLink ดักจับการกด */}
                     <a 
                         href="/products" 
                         onClick={(e) => handleProtectedLink(e, '/products')}
@@ -53,7 +50,6 @@ export default function Footer() {
                     </a>
                 </li>
                 <li>
-                    {/* อันนี้ดักจับอยู่แล้ว */}
                     <a 
                         href="/dashboard" 
                         onClick={(e) => handleProtectedLink(e, '/dashboard')}
@@ -70,25 +66,41 @@ export default function Footer() {
               <ul className="list-unstyled text-white-50 small d-flex flex-column gap-3">
                 <li className="d-flex gap-2">
                   <FaMapMarkerAlt className="text-primary mt-1 flex-shrink-0" />
-                  <span>หอการค้าจังหวัดศรีสะเกษ</span>
+                  <span>มหาวิทยาลัยราชภัฏศรีสะเกษ</span>
                 </li>
                 <li className="d-flex gap-2 align-items-center">
                   <FaPhoneAlt className="text-primary flex-shrink-0" />
-                  <span>093-358-1622</span>
+                  <span>012-345-6789</span>
                 </li>
                 <li className="d-flex gap-3 mt-2">
-                  <a href="#" className="text-white fs-5 hover-scale"><FaFacebook /></a>
-                  <a href="#" className="text-white fs-5 hover-scale"><FaLine /></a>
+                  <a 
+                    href="https://web.facebook.com/comsci.sskru"
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-white fs-5 hover-scale"
+                    title="Facebook Fanpage"
+                  >
+                    <FaFacebook />
+                  </a>
+                  <a 
+                    href="https://line.me/R/ti/p/@793ozxpi"
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-white fs-5 hover-scale"
+                    title="Add Line"
+                  >
+                    <FaLine />
+                  </a>
                 </li>
               </ul>
           </Col>
         </Row>
         <hr className="border-secondary opacity-25 my-4"/>
         <div className="text-center text-white-50 small position-relative">
-            <span>&copy; {new Date().getFullYear()} Sisaket Charity. All rights reserved.</span>
+            <span>&copy; {new Date().getFullYear()} Sisaket Shirt. All rights reserved.</span>
             
             <Link href="/admin/login" className="position-absolute end-0 top-50 translate-middle-y text-white-50 hover-text-white p-2" title="Admin Login">
-                <FaUserShield size={14} />
+                <FaUserShield size={20} />
             </Link>
         </div>
       </Container>

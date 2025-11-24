@@ -1,4 +1,3 @@
-// src/app/admin/products/create/page.tsx
 'use client';
 
 import { useSession } from "next-auth/react";
@@ -121,7 +120,6 @@ export default function CreateProductPage() {
        {/* Header */}
        <div className="d-flex align-items-center justify-content-between mb-4">
            <div className="d-flex align-items-center gap-3">
-               {/* ✅ ปรับปุ่มย้อนกลับให้มีสีสัน */}
                <Button variant="white" className="rounded-circle shadow-sm border p-0 d-flex align-items-center justify-content-center hover-scale bg-white text-primary" style={{width: 45, height: 45}} onClick={() => router.back()}>
                    <FaArrowLeft/>
                </Button>
@@ -137,9 +135,7 @@ export default function CreateProductPage() {
            
            {/* LEFT COLUMN */}
            <Col lg={8}>
-               {/* 1. General Info Card */}
                <Card className="border-status-primary shadow-sm rounded-4 mb-4 hover-card-up overflow-hidden">
-                   {/* ✅ ใส่สีพื้นหลัง Header (Primary Light) */}
                    <Card.Header className="bg-primary bg-opacity-10 border-bottom py-3 text-center">
                        <h6 className="fw-bold text-primary mb-0 d-inline-flex align-items-center justify-content-center gap-2 w-100">
                            <FaBox/> ข้อมูลทั่วไป
@@ -219,9 +215,8 @@ export default function CreateProductPage() {
                    </Card.Body>
                </Card>
 
-               {/* 2. Stock Management Card */}
+               {/* Stock Management Card */}
                <Card className="border-status-warning shadow-sm rounded-4 mb-4 hover-card-up overflow-hidden">
-                   {/* ✅ สีพื้นหลัง Header (Warning Light) */}
                    <Card.Header className="bg-warning bg-opacity-10 border-bottom py-3 text-center">
                         <h6 className="fw-bold text-warning-emphasis mb-0 d-inline-flex align-items-center justify-content-center gap-2 w-100">
                             <FaLayerGroup/> จัดการสต็อก
@@ -284,9 +279,7 @@ export default function CreateProductPage() {
 
            {/* RIGHT COLUMN */}
            <Col lg={4}>
-               {/* 3. Image Upload Card */}
                <Card className="border-status-info shadow-sm rounded-4 mb-4 hover-card-up text-center overflow-hidden">
-                   {/* ✅ ใส่สีพื้นหลัง Header (Info Light) */}
                    <Card.Header className="bg-info bg-opacity-10 border-bottom py-3 text-center">
                        <h6 className="fw-bold text-info-emphasis mb-0 d-inline-flex align-items-center justify-content-center gap-2 w-100">
                            <FaImage/> รูปภาพสินค้า

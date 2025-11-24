@@ -1,4 +1,3 @@
-// src/app/checkout/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -17,7 +16,7 @@ export default function CheckoutPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   
-  // ✅ 1. เพิ่มตัวแปรเช็คสถานะความสำเร็จ
+  // เพิ่มตัวแปรเช็คสถานะความสำเร็จ
   const [isSuccess, setIsSuccess] = useState(false); 
   
   const [formData, setFormData] = useState({
@@ -34,7 +33,7 @@ export default function CheckoutPage() {
       }
   }, [session]);
 
-  // ✅ 2. ปรับ Logic Redirect: ถ้าตะกร้าว่าง AND ยังไม่ได้สั่งซื้อสำเร็จ ถึงค่อยดีดกลับ
+  // ปรับ Logic Redirect: ถ้าตะกร้าว่าง AND ยังไม่ได้สั่งซื้อสำเร็จ ถึงค่อยดีดกลับ
   useEffect(() => {
       if (cart.length === 0 && !isSuccess) {
           router.replace('/products');
@@ -61,7 +60,7 @@ export default function CheckoutPage() {
     const payload = {
       customerName: `${formData.firstName} ${formData.lastName}`,
       phone: formData.phone,
-      address: formData.isShipping ? formData.address : 'รับเองที่หอการค้าฯ',
+      address: formData.isShipping ? formData.address : 'มหาวิทยาลัยราชภัฏศรีสะเกษ',
       isShipping: formData.isShipping,
       items: cart.map(item => ({
         productId: item.productId,
@@ -86,7 +85,7 @@ export default function CheckoutPage() {
 
       if (!res.ok) throw new Error(data.error || 'สั่งซื้อไม่สำเร็จ');
 
-      // ✅ 3. ตั้งค่าว่าเป็น Success แล้ว (เพื่อกันไม่ให้ useEffect ดีดกลับ)
+      // ตั้งค่าว่าเป็น Success แล้ว (เพื่อกันไม่ให้ useEffect ดีดกลับ)
       setIsSuccess(true);
 
       // ล้างตะกร้า
@@ -98,12 +97,10 @@ export default function CheckoutPage() {
     } catch (error: any) {
       console.error(error);
       setError(error.message);
-      setSubmitting(false); // ถ้า Error ให้กดใหม่ได้
+      setSubmitting(false);
     } 
-    // (เอา finally ออก เพื่อไม่ให้ submitting เป็น false เร็วเกินไปในกรณี success)
   };
 
-  // ไม่ต้อง return null ตรงนี้ เพื่อให้ UI ไม่กระพริบ
   if (cart.length === 0 && !isSuccess) return null; 
 
   return (
@@ -156,7 +153,7 @@ export default function CheckoutPage() {
                                onClick={() => setFormData(prev => ({ ...prev, isShipping: false }))}
                            >
                                <div className="fw-bold">🏢 รับเอง</div>
-                               <small>ฟรี (หอการค้าฯ)</small>
+                               <small>ฟรี (มหาวิทยาลัยราชภัฏศรีสะเกษ)</small>
                            </div>
                        </div>
 

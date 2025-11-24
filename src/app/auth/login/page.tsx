@@ -1,4 +1,3 @@
-// src/app/auth/login/page.tsx
 'use client';
 
 import { useState } from 'react';
@@ -19,7 +18,7 @@ export default function UserLoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // 🔒 Phone Logic
+  // Phone Logic
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, '');
     if (value.length <= 10) setPhoneNumber(value);
@@ -45,7 +44,7 @@ export default function UserLoginPage() {
       const result = await signIn('credentials', {
         identifier: phoneNumber,
         password,
-        isUserLogin: "true", // ✅ Hardcode ว่าเป็น User
+        isUserLogin: "true",
         redirect: false,
       });
 

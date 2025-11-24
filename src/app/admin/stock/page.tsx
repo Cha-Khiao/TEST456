@@ -1,4 +1,3 @@
-// src/app/admin/stock/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -35,7 +34,6 @@ export default function StockListPage() {
   });
 
   return (
-    // ✅ 1. ลบ style background ออก แก้ปัญหาพื้นหลังซ้อน
     <Container fluid className="px-4 py-4">
         
         {/* Header Section */}
@@ -114,7 +112,7 @@ export default function StockListPage() {
                                                 </div>
                                             </div>
 
-                                            {/* ✅ 2. Action Arrow Button (เด่นขึ้น มีมิติ มี Animation) */}
+                                            {/* Action Arrow Button */}
                                             <div className="ms-2">
                                                 <div className="btn-gradient-warning rounded-circle p-0 d-flex align-items-center justify-content-center text-white shadow hover-scale transition-all" 
                                                      style={{width: 40, height: 40}}>

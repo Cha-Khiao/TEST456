@@ -1,11 +1,10 @@
-// src/app/admin/products/edit/[id]/page.tsx
 'use client';
 
 import { useSession } from "next-auth/react";
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Container, Card, Button, Form, Row, Col, Spinner, InputGroup } from 'react-bootstrap';
-import { FaArrowLeft, FaSave, FaImage, FaBox, FaTag, FaCloudUploadAlt, FaTimes } from 'react-icons/fa';
+import { FaArrowLeft, FaSave, FaImage, FaBox, FaTag, FaCloudUploadAlt } from 'react-icons/fa';
 import API_ENDPOINTS from '@/lib/api';
 
 export default function EditProductPage() {
@@ -16,8 +15,11 @@ export default function EditProductPage() {
   const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  
+  // State สำหรับข้อมูล
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [typeInput, setTypeInput] = useState('');
+  const [existingTypes, setExistingTypes] = useState<string[]>([]);
 
   const nameRef = useRef<HTMLInputElement>(null);
   const priceRef = useRef<HTMLInputElement>(null);
@@ -27,16 +29,21 @@ export default function EditProductPage() {
   useEffect(() => {
       const fetchData = async () => {
           try {
-              // ดึงข้อมูลสินค้าทั้งหมดมาหาตัวที่ตรง ID (ในอนาคตควรใช้ endpoint by ID โดยตรง)
               const res = await fetch(API_ENDPOINTS.PRODUCTS);
               const data = await res.json();
+              
               const found = data.find((p: any) => p._id === id);
               
               if(found) { 
                   setProduct(found); 
                   setImagePreview(found.imageUrl); 
-                  setTypeInput(found.type);
+                  
+                  setTypeInput(found.type); 
               }
+
+              const types = Array.from(new Set(data.map((p: any) => p.type))).filter(Boolean) as string[];
+              setExistingTypes(types);
+
           } catch(e) { 
               console.error(e); 
           } finally { 
@@ -45,6 +52,12 @@ export default function EditProductPage() {
       };
       if (id) fetchData();
   }, [id]);
+
+  useEffect(() => {
+    if (product) {
+        setTypeInput(product.type);
+    }
+  }, [product]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
@@ -57,12 +70,16 @@ export default function EditProductPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
       e.preventDefault();
+      
+      if (!typeInput) return alert('กรุณาระบุประเภทสินค้า');
+
       setSubmitting(true);
       
       const formData = new FormData();
       formData.append('name', nameRef.current?.value || '');
       formData.append('price', priceRef.current?.value || '0');
       formData.append('description', descRef.current?.value || '');
+      
       formData.append('type', typeInput);
       
       if (fileRef.current?.files?.[0]) {
@@ -98,14 +115,12 @@ export default function EditProductPage() {
   if (!product) return <div className="text-center py-5">ไม่พบสินค้า</div>;
 
   return (
-      // ✅ 1. แก้ไขพื้นหลังซ้อน: เอา inline style background-color ออก ให้ใช้ของ Layout หลัก
       <Container fluid className="px-4 py-4">
         
         {/* Header */}
         <div className="d-flex align-items-center justify-content-between mb-4">
             <div className="d-flex align-items-center gap-3">
                 <Button variant="white" className="rounded-circle shadow-sm border p-0 d-flex align-items-center justify-content-center hover-scale" style={{width: 45, height: 45}} onClick={() => router.back()}>
-                    {/* ✅ 3. เพิ่มสีตรงปุ่มย้อนกลับ: เปลี่ยนจาก text-secondary เป็น text-primary */}
                     <FaArrowLeft className="text-primary"/>
                 </Button>
                 <div>
@@ -120,10 +135,7 @@ export default function EditProductPage() {
                 
                 {/* LEFT COLUMN: Info */}
                 <Col lg={8}>
-                    {/* ✅ 4. เพิ่มมิติ: เปลี่ยน shadow-sm เป็น shadow */}
-                    {/* ✅ 5. สีขอบยังเหมือนเดิม: border-status-primary ยังอยู่ */}
                     <Card className="border-status-primary shadow rounded-4 mb-4 hover-card-up overflow-hidden">
-                        {/* ✅ 2. เพิ่มสีตัวหัวคอลัมม์: เปลี่ยน bg-white เป็น bg-primary bg-opacity-10 */}
                         <Card.Header className="bg-primary bg-opacity-10 border-bottom py-3 text-center">
                             <h6 className="fw-bold text-primary mb-0 d-inline-flex align-items-center gap-2">
                                 <span className="p-2 bg-primary bg-opacity-10 rounded-circle"><FaBox/></span> ข้อมูลทั่วไป
@@ -150,17 +162,20 @@ export default function EditProductPage() {
                                         <Form.Label className="text-secondary fw-bold small text-uppercase" style={{letterSpacing:'0.5px'}}>ประเภทสินค้า</Form.Label>
                                         <InputGroup className="input-group-modern">
                                             <InputGroup.Text className="text-secondary ps-3"><FaTag/></InputGroup.Text>
+                                            
                                             <Form.Control 
                                                 list="typeOptions"
                                                 value={typeInput} 
                                                 onChange={(e) => setTypeInput(e.target.value)}
                                                 required 
+                                                placeholder="พิมพ์ หรือเลือกจากรายการ"
                                                 className="bg-transparent border-0 py-3 shadow-none fw-bold text-dark"
                                                 style={{ lineHeight: '1.8', padding: '0.8rem 1rem' }}
                                             />
                                             <datalist id="typeOptions">
-                                                <option value="normal">Normal</option>
-                                                <option value="mourning">Mourning</option>
+                                                {existingTypes.map((type, idx) => (
+                                                    <option key={idx} value={type} />
+                                                ))}
                                             </datalist>
                                         </InputGroup>
                                     </Form.Group>
@@ -205,10 +220,7 @@ export default function EditProductPage() {
 
                 {/* RIGHT COLUMN: Image & Save */}
                 <Col lg={4}>
-                    {/* ✅ 4. เพิ่มมิติ: เปลี่ยน shadow-sm เป็น shadow */}
-                    {/* ✅ 5. สีขอบยังเหมือนเดิม: border-status-info ยังอยู่ */}
                     <Card className="border-status-info shadow rounded-4 mb-4 hover-card-up text-center overflow-hidden h-100">
-                        {/* ✅ 2. เพิ่มสีตัวหัวคอลัมม์: เปลี่ยน bg-white เป็น bg-info bg-opacity-10 */}
                         <Card.Header className="bg-info bg-opacity-10 border-bottom py-3">
                             <h6 className="fw-bold text-info mb-0 d-inline-flex align-items-center gap-2">
                                 <span className="p-2 bg-info bg-opacity-10 rounded-circle"><FaImage/></span> รูปภาพสินค้า

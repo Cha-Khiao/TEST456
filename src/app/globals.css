@@ -237,7 +237,7 @@ a { text-decoration: none; }
 }
 .brand-container { display: flex; align-items: center; }
 .brand-logos { display: flex; align-items: center; gap: 5px; }
-.brand-text { display: flex; flex-direction: column; justify-content: center; line-height: 1.1; }
+.brand-text { display: flex; flex-direction: column; justify-content: center; line-height: 1.2; }
 
 /* User Dropdown */
 .user-dropdown-toggle {
@@ -740,7 +740,7 @@ a { text-decoration: none; }
 .admin-login-decoration-1 {
   position: absolute;
   top: 0;
-  start: 0;
+  caret: 0;
   width: 600px;
   height: 600px;
   background: #4F46E5;

@@ -1,4 +1,3 @@
-// src/app/admin/products/page.tsx
 'use client';
 
 import { useSession } from "next-auth/react";
@@ -139,8 +138,6 @@ export default function AdminProductsPage() {
                                     className={`border-bottom transition-all ${!product.isActive ? 'bg-light' : 'bg-white'}`}
                                     style={{ borderLeft: product.isActive ? '5px solid #10b981' : '5px solid #cbd5e1' }}
                                 >
-                                    
-                                    {/* Product Name & Image (ชิดซ้าย) */}
                                     <td className="py-4 text-start ps-5">
                                         <div className={`d-flex align-items-center ${!product.isActive ? 'opacity-50' : ''}`}>
                                             <div className={`position-relative rounded-3 overflow-hidden border flex-shrink-0 me-3 shadow-sm ${!product.isActive && 'grayscale'}`} style={{width: 50, height: 50}}>
@@ -159,22 +156,18 @@ export default function AdminProductsPage() {
                                         </div>
                                     </td>
 
-                                    {/* Type (กึ่งกลาง) */}
                                     <td className={`text-center py-4 ${!product.isActive ? 'opacity-50' : ''}`}>
                                         <Badge bg="light" text="dark" className="border fw-normal px-3 py-2 rounded-pill text-capitalize shadow-sm">
                                             <FaTag className="me-1 text-secondary" size={10}/> {product.type}
                                         </Badge>
                                     </td>
 
-                                    {/* Price (กึ่งกลาง) */}
                                     <td className={`text-center py-4 ${!product.isActive ? 'opacity-50' : ''}`}>
                                         <span className="fw-bold text-primary fs-5">฿{product.price.toLocaleString()}</span>
                                     </td>
 
-                                    {/* Active Switch (กึ่งกลาง) */}
                                     <td className="py-4">
                                         <div className="d-flex flex-column align-items-center justify-content-center gap-1">
-                                            {/* ✅ ใช้ class switch-center จาก globals.css */}
                                             <div className="form-check form-switch switch-center">
                                                 <input 
                                                     className="form-check-input cursor-pointer shadow-none" 
@@ -191,7 +184,6 @@ export default function AdminProductsPage() {
                                         </div>
                                     </td>
 
-                                    {/* Actions (กึ่งกลาง) */}
                                     <td className={`text-center py-4 ${!product.isActive ? 'opacity-75' : ''}`}>
                                         <div className="d-flex justify-content-center gap-2">
                                             <Link href={`/admin/products/edit/${product._id}`}>

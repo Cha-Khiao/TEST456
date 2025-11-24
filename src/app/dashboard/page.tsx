@@ -1,4 +1,3 @@
-// src/app/dashboard/page.tsx
 'use client';
 
 import { useSession } from "next-auth/react";
@@ -26,8 +25,8 @@ interface Order {
   totalPrice: number;
   items: OrderItem[];
   createdAt: string;
-  customerName: string; // เพิ่ม field นี้เพื่อให้ TS ไม่ฟ้อง
-  phone: string;       // เพิ่ม field นี้
+  customerName: string;
+  phone: string;
 }
 
 export default function DashboardPage() {
@@ -46,7 +45,7 @@ export default function DashboardPage() {
       const userPhone = session.user.name; // ใช้ name (ที่เป็นเบอร์โทร) หรือ id ตาม logic ที่เราเก็บ
 
       try {
-        // ✅ แก้ไขจุดนี้: แนบ Token ไปกับ Header
+        // แนบ Token ไปกับ Header
         const res = await fetch(`${API_ENDPOINTS.ORDERS}?phone=${userPhone}`, {
             headers: {
                 'Authorization': `Bearer ${(session as any)?.accessToken}`
@@ -240,7 +239,7 @@ export default function DashboardPage() {
                       </div>
                       <h5 className="fw-bold text-dark mb-1">ยังไม่มีประวัติการสั่งซื้อ</h5>
                       <p className="text-muted mb-4 small">เมื่อคุณสั่งซื้อเสื้อแล้ว รายการจะแสดงที่นี่</p>
-                      <Link href="/orders/create">
+                      <Link href="/products">
                          <Button className="btn-gradient-primary rounded-pill px-4 fw-bold shadow-lg btn-sm">
                             <FaPlus className="me-2"/> สั่งซื้อเสื้อเลย
                          </Button>

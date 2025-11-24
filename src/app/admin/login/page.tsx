@@ -1,4 +1,3 @@
-// src/app/admin/login/page.tsx
 'use client';
 
 import { useState } from 'react';
@@ -25,7 +24,7 @@ export default function AdminLogin() {
     const result = await signIn('credentials', {
       identifier: target.username.value,
       password: target.password.value,
-      isUserLogin: "false", // บอกว่าเป็น Admin
+      isUserLogin: "false",
       redirect: false,
     });
 
@@ -38,7 +37,6 @@ export default function AdminLogin() {
   };
 
   return (
-    // ✅ ใช้ Class admin-login-wrapper จาก globals.css
     <div className="admin-login-wrapper">
       
       {/* Background Decorations */}
@@ -67,7 +65,6 @@ export default function AdminLogin() {
                 <Form onSubmit={handleSubmit}>
                     <Form.Group className="mb-3">
                         <Form.Label className="small fw-bold text-secondary">Username</Form.Label>
-                        {/* ✅ ใช้ Class input-group-focus จาก globals.css */}
                         <InputGroup className="input-group-focus rounded-3 overflow-hidden border transition-all">
                             <InputGroup.Text className="bg-white border-0 text-secondary ps-3"><FaUser/></InputGroup.Text>
                             <Form.Control 
@@ -82,7 +79,6 @@ export default function AdminLogin() {
 
                     <Form.Group className="mb-4">
                         <Form.Label className="small fw-bold text-secondary">Password</Form.Label>
-                        {/* ✅ ใช้ Class input-group-focus จาก globals.css */}
                         <InputGroup className="input-group-focus rounded-3 overflow-hidden border transition-all">
                             <InputGroup.Text className="bg-white border-0 text-secondary ps-3"><FaLock/></InputGroup.Text>
                             <Form.Control 
@@ -111,7 +107,7 @@ export default function AdminLogin() {
 
                 <div className="text-center mt-4 pt-3 border-top border-light">
                     <small className="text-muted" style={{fontSize: '0.75rem'}}>
-                        &copy; Sisaket Charity Admin System
+                        &copy; Sisaket Shirt Admin System
                     </small>
                 </div>
             </Card.Body>

@@ -1,4 +1,3 @@
-// src/app/products/page.tsx
 import ProductsView from '@/components/ProductsView';
 import API_ENDPOINTS from '@/lib/api';
 import { Product } from '@/types';

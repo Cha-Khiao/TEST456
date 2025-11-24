@@ -1,4 +1,3 @@
-// src/components/BackToTop.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -40,7 +39,6 @@ export default function BackToTop() {
         <FaArrowUp />
       </button>
 
-      {/* CSS เฉพาะสำหรับปุ่มนี้ */}
       <style jsx>{`
         .btn-back-to-top {
           position: fixed;

@@ -1,4 +1,3 @@
-// src/app/admin/layout.tsx
 'use client';
 
 import { useSession, signOut } from "next-auth/react";
@@ -6,14 +5,13 @@ import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useEffect } from 'react';
 import { Button, Spinner } from 'react-bootstrap';
-import { FaClipboardList, FaSignOutAlt, FaTshirt, FaChartBar, FaUserShield } from 'react-icons/fa';
+import { FaClipboardList, FaSignOutAlt, FaTshirt, FaChartBar, FaUserShield, FaExternalLinkAlt } from 'react-icons/fa';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { data: session, status } = useSession();
   const router = useRouter();
   const pathname = usePathname();
   
-  // ถ้าเป็นหน้า Login ไม่ต้องใช้ Layout นี้
   if (pathname === '/admin/login') return <>{children}</>;
 
   useEffect(() => {
@@ -22,7 +20,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     if (status === 'authenticated' && pathname === '/admin') router.replace('/admin/orders');
   }, [status, router, pathname]);
 
-  // Loading State
   if (status === 'loading') return (
     <div className="vh-100 d-flex justify-content-center align-items-center bg-light">
         <div className="text-center">
@@ -34,7 +31,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   if (status === 'unauthenticated') return null;
 
-  // Role Check
   // @ts-ignore
   if (session?.user?.role !== 'admin') {
     return (
@@ -53,7 +49,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  // Navigation Items Configuration
   const navItems = [
       { href: '/admin/orders', label: 'รายการคำสั่งซื้อ', icon: FaClipboardList },
       { href: '/admin/products', label: 'จัดการสินค้า', icon: FaTshirt },
@@ -74,7 +69,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
            </div>
            <div style={{lineHeight: '1.2'}}>
                <span className="fs-5 fw-bold d-block text-white">Admin Console</span>
-               <span className="small text-white-50" style={{fontSize: '0.75rem'}}>Sisaket Charity Shop</span>
+               <span className="small text-white-50" style={{fontSize: '0.75rem'}}>Sisaket Charity</span>
            </div>
         </div>
 
@@ -96,9 +91,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
              );
           })}
         </ul>
+        
+        {/* Preview Store Button */}
+        <div className="py-4 border-top border-secondary border-opacity-25 mt-3">
+            <a href="/" target="_blank" rel="noopener noreferrer" 
+               className="btn w-100 d-flex align-items-center justify-content-center gap-2 py-2 rounded-3 text-white shadow-sm fw-bold hover-scale"
+               style={{background: 'linear-gradient(90deg, #0ea5e9, #2563eb)', border: 'none'}}>
+                 <FaExternalLinkAlt size={14}/> ดูหน้าร้านค้า
+            </a>
+        </div>
 
         {/* Footer User Profile */}
-        <div className="mt-auto pt-4 border-top border-secondary border-opacity-25">
+        <div className="pt-4 border-top border-secondary border-opacity-25">
             <div className="d-flex align-items-center px-2 mb-3">
                 <div className="rounded-circle bg-gradient-secondary p-2 me-2 text-white d-flex align-items-center justify-content-center fw-bold shadow-sm" 
                      style={{width: 40, height: 40, background: '#334155'}}>
@@ -125,12 +129,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {/* --- MAIN CONTENT AREA --- */}
       <main className="flex-grow-1 d-flex flex-column h-100" style={{maxHeight: '100vh', overflowY: 'auto', backgroundColor: '#f8fafc'}}>
          
-         {/* Mobile Header (Visible only on small screens) */}
+         {/* Mobile Header */}
          <div className="d-md-none bg-dark text-white p-3 d-flex justify-content-between align-items-center shadow-sm sticky-top">
              <span className="fw-bold d-flex align-items-center gap-2"><FaUserShield/> Admin Panel</span>
              
-             {/* Mobile Menu Dropdown (Simplified) */}
-             <div className="d-flex gap-3">
+             <div className="d-flex gap-3 align-items-center">
+                {/* Mobile Preview Link */}
+                <a href="/" target="_blank" className="text-white opacity-75"><FaExternalLinkAlt/></a>
+                <div className="vr bg-white opacity-25"></div>
                 {navItems.map(item => (
                     <Link key={item.href} href={item.href} className={`text-white ${pathname?.startsWith(item.href) ? 'opacity-100' : 'opacity-50'}`}>
                         <item.icon size={20}/>
@@ -143,7 +149,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
              </div>
          </div>
 
-         {/* Content Wrapper */}
          <div className="p-4 p-lg-5">
             {children}
          </div>

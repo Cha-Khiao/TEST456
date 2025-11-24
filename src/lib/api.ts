@@ -1,6 +1,4 @@
-// src/lib/api.ts
-
-// อ่านค่าจาก Environment Variable (ถ้าไม่มีให้ใช้ localhost)
+// BASE_API
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
 
 export const API_ENDPOINTS = {
@@ -16,7 +14,7 @@ export const API_ENDPOINTS = {
   // การชำระเงิน
   UPLOAD_SLIP: `${BASE_URL}/payment/upload-slip`,
   
-  // ระบบสมาชิก (อนาคต)
+  // ระบบสมาชิก 
   LOGIN: `${BASE_URL}/auth/login`,
 };
 

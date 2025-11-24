@@ -1,4 +1,3 @@
-// src/app/admin/stock/[id]/page.tsx
 'use client';
 
 import { useSession } from "next-auth/react";
@@ -97,7 +96,6 @@ export default function ManageStockDetailPage() {
         {/* Header */}
         <div className="d-flex align-items-center justify-content-between mb-4">
             <div className="d-flex align-items-center gap-3">
-                {/* ✅ แก้ไขปุ่มย้อนกลับ: ใช้ Gradient สีส้ม + เงา ให้เด่นขึ้น */}
                 <Button 
                     className="rounded-circle shadow border-0 p-0 d-flex align-items-center justify-content-center hover-scale text-white" 
                     style={{width: 45, height: 45, background: 'linear-gradient(135deg, #f59e0b, #d97706)'}} 

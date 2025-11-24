@@ -1,4 +1,3 @@
-// src/app/orders/details/[id]/page.tsx
 'use client';
 
 import { useSession } from "next-auth/react";
@@ -22,7 +21,6 @@ const formatDate = (dateString: string) => {
   });
 };
 
-// ✅ 1. เพิ่มข้อมูลชื่อขั้นตอน (Step Labels)
 const STEP_INFO: Record<string, string> = {
     pending_payment: 'รอชำระ',
     verification: 'ตรวจสอบ',
@@ -136,7 +134,6 @@ export default function OrderDetailsPage() {
                                    {isPassed && <FaCheckCircle size={12}/>}
                               </div>
                               
-                              {/* ✅ 2. แสดงชื่อขั้นตอนใต้จุด (Restore Labels) */}
                               <small className={`fw-bold text-nowrap ${isCurrent ? 'text-dark' : 'text-muted'}`} 
                                      style={{fontSize: '0.75rem', opacity: isPassed ? 1 : 0.6}}>
                                   {STEP_INFO[step]}
@@ -166,7 +163,6 @@ export default function OrderDetailsPage() {
                          <FaArrowLeft size={20} />
                       </div>
                       <div>
-                          {/* ✅ 3. เพิ่มขนาดตัวหนังสือหัวข้อ (Larger Title) */}
                           <h2 className="fw-bold text-dark mb-0 display-6" style={{fontSize: '1.75rem'}}>รายละเอียดคำสั่งซื้อ</h2>
                           <small className="text-muted fs-6">ย้อนกลับไปหน้าหลัก</small>
                       </div>
@@ -189,7 +185,7 @@ export default function OrderDetailsPage() {
               <Col lg={8}>
                   
                   {/* Status Banner */}
-                  {/* ✅ ใช้ Class ขอบสีจาก globals.css */}
+                  {/* ใช้ Class ขอบสีจาก globals.css */}
                   <Card className={`shadow-sm rounded-4 overflow-hidden mb-4 hover-card-up ${theme.borderClass}`}>
                       
                       <div className={`p-4 p-lg-5 d-flex flex-column flex-md-row align-items-center gap-4 ${theme.bgClass}`}>
@@ -207,7 +203,7 @@ export default function OrderDetailsPage() {
                   </Card>
 
                   {/* Items List */}
-                  {/* ✅ ใช้ border-status-primary */}
+                  {/* ใช้ border-status-primary */}
                   <Card className="shadow-sm rounded-4 mb-4 overflow-hidden border-status-primary">
                       <div className="p-4 border-bottom d-flex align-items-center justify-content-between bg-white">
                           <h5 className="fw-bold mb-0 d-flex align-items-center gap-2 text-dark">
@@ -244,7 +240,7 @@ export default function OrderDetailsPage() {
 
                   {/* Slip Preview */}
                   {order.paymentProofUrl && (
-                      /* ✅ ใช้ border-status-success */
+                      /* ใช้ border-status-success */
                       <Card className="shadow-sm rounded-4 overflow-hidden mb-4 hover-card-up border-status-success">
                           <div className="p-4 border-bottom bg-white">
                               <h5 className="fw-bold mb-0 d-flex align-items-center gap-2 text-dark">
@@ -279,7 +275,7 @@ export default function OrderDetailsPage() {
                       
                       {/* Action Card (Pay Now) */}
                       {order.status === 'pending_payment' && (
-                          /* ✅ ใช้ border-status-warning */
+                          /* ใช้ border-status-warning */
                           <Card className="shadow rounded-4 mb-4 overflow-hidden hover-card-up border-status-warning">
                               <Card.Body className="p-4 text-center bg-white">
                                   <div className="d-inline-flex p-3 rounded-circle bg-warning bg-opacity-10 text-warning mb-3 shadow-sm">
@@ -301,7 +297,7 @@ export default function OrderDetailsPage() {
                       )}
 
                       {/* Summary & Info Card */}
-                      {/* ✅ ใช้ border-status-general */}
+                      {/* ใช้ border-status-general */}
                       <Card className="shadow-sm rounded-4 overflow-hidden mb-4 border-status-general">
                           <div className="p-3 bg-white border-bottom">
                               <h6 className="fw-bold mb-0 text-dark d-flex align-items-center gap-2">
@@ -339,7 +335,7 @@ export default function OrderDetailsPage() {
                                       <div>
                                           <small className="fw-bold d-block text-dark">ที่อยู่จัดส่ง</small>
                                           <p className="small text-secondary mb-0 lh-sm">
-                                              {order.isShipping ? order.address : 'รับด้วยตนเองที่หอการค้าจังหวัดศรีสะเกษ'}
+                                              {order.isShipping ? order.address : 'รับด้วยตนเองที่มหาวิทยาลัยราชภัฏศรีสะเกษ'}
                                           </p>
                                       </div>
                                   </div>

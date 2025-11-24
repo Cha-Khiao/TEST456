@@ -1,4 +1,3 @@
-// src/components/Navbar.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -31,7 +30,7 @@ export default function Navbar() {
       displayName = session.user.name;
   }
 
-  // ✅ Logic รูปโปรไฟล์:
+  // Logic รูปโปรไฟล์
   // 1. ถ้ามีรูปจริง (Google) ให้ใช้รูปนั้น
   // 2. ถ้าไม่มี (Login เบอร์โทร) ให้เจนรูปการ์ตูนจาก DiceBear โดยใช้เบอร์โทรเป็น Seed
   const userImage = session?.user?.image || `https://api.dicebear.com/9.x/notionists/svg?seed=${displayName}&backgroundColor=c0aede,d1d4f9,b6e3f4,ffd5dc,ffdfbf`;
@@ -91,15 +90,15 @@ export default function Navbar() {
           <BSNavbar.Brand as={Link} href="/" className="d-flex align-items-center gap-2 z-2">
               <div className="d-flex position-relative">
                  <div className="bg-white rounded-circle p-1 shadow-sm position-relative z-1 border border-light">
-                    <Image src="/images/100.png" alt="Logo" width={38} height={38} className="rounded-circle" />
+                    <Image src="/images/bee01.png" alt="Logo" width={38} height={38} className="rounded-circle" />
                  </div>
                  <div className="bg-white rounded-circle p-1 shadow-sm position-relative border border-light" style={{marginLeft: '-12px'}}>
-                    <Image src="/images/200.png" alt="Logo" width={38} height={38} className="rounded-circle" />
+                    <Image src="/images/bee02.png" alt="Logo" width={38} height={38} className="rounded-circle" />
                  </div>
               </div>
               <div className="lh-1 d-flex flex-column ms-2">
-                 <span className="fw-bold text-dark" style={{letterSpacing: '-0.5px', fontSize: '1rem'}}>YEC SISAKET</span>
-                 <span className="text-muted small" style={{fontSize: '0.65rem'}}>Charity Shop</span>
+                 <span className="fw-bold text-dark" style={{letterSpacing: '-0.5px', fontSize: '1rem'}}>COMSCI SSKRU</span>
+                 <span className="text-muted small" style={{fontSize: '0.65rem'}}>Sisaket Shirt</span>
               </div>
           </BSNavbar.Brand>
 
@@ -139,7 +138,6 @@ export default function Navbar() {
                 <Dropdown.Toggle as="div" className="cursor-pointer" style={{border: 'none', background: 'transparent'}}>
                    <div className="d-flex align-items-center gap-2 p-1 pe-3 rounded-pill hover-bg-light transition-all border border-transparent hover-border-light">
                        <div className="position-relative">
-                          {/* ✅ แสดงรูปโปรไฟล์ที่เจนมา หรือรูปจาก Google */}
                           <Image src={userImage} alt="Profile" width={38} height={38} className="rounded-circle border shadow-sm" unoptimized />
                           <span className="position-absolute bottom-0 end-0 bg-success border border-2 border-white rounded-circle" style={{width:10, height:10}}></span>
                        </div>
@@ -158,7 +156,6 @@ export default function Navbar() {
                         
                         <div className="position-relative z-1">
                             <div className="d-inline-block p-1 bg-white bg-opacity-25 rounded-circle mb-2">
-                                {/* ✅ รูปโปรไฟล์ใน Dropdown */}
                                 <Image src={userImage} alt="Profile" width={60} height={60} className="rounded-circle border border-2 border-white" unoptimized />
                             </div>
                             <h6 className="fw-bold mb-0">{displayName}</h6>
@@ -235,7 +232,6 @@ export default function Navbar() {
           {isLoggedIn ? (
               <div className="d-flex align-items-center gap-3">
                   <div className="bg-white rounded-circle p-1 shadow-sm border">
-                      {/* ✅ รูปโปรไฟล์ Mobile */}
                       <Image src={userImage} alt="User" width={40} height={40} className="rounded-circle" unoptimized/>
                   </div>
                   <div>

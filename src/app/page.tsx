@@ -1,4 +1,3 @@
-// src/app/page.tsx
 import HomeView from '@/components/HomeView';
 import API_ENDPOINTS from '@/lib/api';
 import { Product } from '@/types';
@@ -19,11 +18,11 @@ async function getProducts(): Promise<Product[]> {
 export default async function Home() {
   const products = await getProducts();
 
-  // --- 1. คำนวณภาพรวมยอดจำหน่าย (Dashboard Stats) ---
+  // --- คำนวณภาพรวมยอดจำหน่าย (Dashboard Stats) ---
   let totalRevenue = 0;     // ยอดขายรวม (บาท)
   let totalItemsSold = 0;   // จำนวนตัวที่ขายได้รวม
 
-  // --- 2. หาสินค้าขายดี (Best Seller) ---
+  // --- หาสินค้าขายดี (Best Seller) ---
   let bestSeller = null;
   let maxSold = -1;
 
@@ -55,8 +54,7 @@ export default async function Home() {
       bestSeller: bestSeller
   };
 
-  // --- 3. คำนวณสต็อกคงเหลือรวมทุกไซส์ (Total Stock) ---
-  // (ไม่แยกสีแล้ว เอาแค่รวมพอ ตามที่ขอครับ)
+  // --- คำนวณสต็อกคงเหลือรวมทุกไซส์ (Total Stock) ---
   const sizeStatsTotal = ALL_SIZES.map(size => {
     const count = products.reduce((sum, p) => {
         const found = p.stock?.find(s => s.size === size);
@@ -68,7 +66,7 @@ export default async function Home() {
   return (
     <HomeView 
       products={products}
-      stats={stats} // ✅ ส่งข้อมูลสถิติใหม่ไป
+      stats={stats}
       sizeStatsTotal={sizeStatsTotal}
     />
   );

@@ -1,4 +1,3 @@
-// src/app/order/success/[id]/page.tsx
 'use client';
 
 import { useSession } from "next-auth/react";
@@ -161,7 +160,6 @@ export default function OrderSuccessPage() {
                             </div>
                         </div>
                         
-                        {/* ✅ แก้ไข: ปรับปุ่มคัดลอกให้สมดุล */}
                         <div className="d-flex align-items-center justify-content-between bg-white border rounded-3 px-3 py-2">
                             <span className="fw-bold text-primary fs-3 font-monospace" style={{letterSpacing: '1px'}}>{BANK_INFO.accNo}</span>
                             

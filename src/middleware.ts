@@ -1,4 +1,3 @@
-// src/middleware.ts
 import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
 
@@ -27,10 +26,9 @@ export const config = {
     "/order/:path*", 
     "/orders/:path*",
     
-    // 🔒 ฝั่ง Admin (ระบุเจาะจง เพื่อยกเว้น /admin/login)
+    // ฝั่ง Admin (ระบุเจาะจง เพื่อยกเว้น /admin/login)
     "/admin/orders/:path*",
     "/admin/products/:path*",
     "/admin/stock/:path*",
-    // ❌ อย่าใส่ "/admin/:path*" แบบเหมาเข่ง เพราะมันจะล็อกหน้า login ด้วย
   ],
 };

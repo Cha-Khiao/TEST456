@@ -1,4 +1,3 @@
-// src/app/admin/orders/page.tsx
 'use client';
 
 import { useSession } from "next-auth/react";
@@ -183,7 +182,6 @@ export default function AdminOrdersPage() {
             <div className="table-responsive">
                 <Table hover striped className="align-middle mb-0" style={{minWidth: '1000px'}}>
                     <thead className="bg-light text-secondary">
-                        {/* ✅ Header: เอา text-start/end ออก เพื่อให้ Default Center ทำงาน */}
                         <tr className="text-center align-middle" style={{ height: '50px' }}>
                             <th className="py-3">Order Info</th>
                             <th>ลูกค้า</th>
@@ -213,7 +211,7 @@ export default function AdminOrdersPage() {
                                             </div>
                                         </td>
 
-                                        {/* 2. ลูกค้า (ลบรูปโปรไฟล์ออก + จัดกึ่งกลาง) */}
+                                        {/* 2. ลูกค้า */}
                                         <td>
                                             <div className="d-flex flex-column align-items-center">
                                                 <div className="fw-bold text-dark">{order.customerName}</div>
@@ -254,7 +252,7 @@ export default function AdminOrdersPage() {
                                             </span>
                                         </td>
 
-                                        {/* 7. Action (เอา text-end ออก) */}
+                                        {/* 7. Action */}
                                         <td>
                                             <Button variant="light" size="sm" className="rounded-pill px-3 border hover-scale text-primary fw-bold shadow-sm" onClick={() => { setSelectedOrder(order); setShowModal(true); }}>
                                                 <FaEdit className="me-1"/> จัดการ

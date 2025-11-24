@@ -1,4 +1,4 @@
-# 🎉 Sisaket Charity Shop - ระบบจัดการเสื้อที่ระลึก 243 ปี ศรีสะเกษ
+# 🎉 Sisaket Shirt - ระบบจัดการเสื้อ 243 ปี ศรีสะเกษ
 
 > ระบบ E-Commerce สำหรับจัดการและจำหน่ายเสื้อที่ระลึก พร้อมระบบ Admin ที่ทันสมัย
 
@@ -7,13 +7,18 @@
 [![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3-purple)](https://getbootstrap.com/)
 [![NextAuth.js](https://img.shields.io/badge/NextAuth.js-4.24-green)](https://next-auth.js.org/)
 
+## 🔌 Backend API
+เว็บไซต์นี้ทำงานร่วมกับ **sisaket-shirt-api** ซึ่งเป็น Backend ที่สร้างด้วย Node.js, Express, และ MongoDB
+**ดูโค้ดของ API: [https://github.com/Cha-Khiao/sisaket-shirt-api.git](https://github.com/Cha-Khiao/sisaket-shirt-api.git)**
+---
+
 ## 📋 สารบัญ
 
-- [🌟 ฟีเจอร์หลัก](#-ฟีเจอรหลก)
-- [🛠️ เทคโนโลยีที่ใช้](#️-เทคโนโลยทใช)
-- [📂 โครงสร้างโปรเจค](#-โครงสรางโปรเจค)
-- [⚙️ การติดตั้ง](#️-การตดตง)
-- [🚀 การใช้งาน](#-การใชงาน)
+- [🌟 ฟีเจอร์หลัก](#-ฟีเจอร์หลัก)
+- [🛠️ เทคโนโลยีที่ใช้](#️-เทคโนโลยีที่ใช้)
+- [📂 โครงสร้างโปรเจค](#-โครงสร้างโปรเจค)
+- [⚙️ การติดตั้ง](#️-การติดตั้ง)
+- [🚀 การใช้งาน](#-การใช้งาน)
 - [🔐 ระบบ Authentication](#-ระบบ-authentication)
 - [📦 API Endpoints](#-api-endpoints)
 - [🎨 UI/UX Features](#-uiux-features)
@@ -69,61 +74,61 @@
 
 ```
 src/
-├── app/                          # Next.js App Router
-│   ├── admin/                    # Admin Portal
-│   │   ├── layout.tsx           # Admin Layout (Sidebar, Auth Guard)
-│   │   ├── login/page.tsx       # Admin Login
-│   │   ├── orders/page.tsx      # จัดการคำสั่งซื้อ
-│   │   ├── products/            # จัดการสินค้า
-│   │   │   ├── page.tsx         # รายการสินค้า
-│   │   │   ├── create/page.tsx  # เพิ่มสินค้า
-│   │   │   └── edit/[id]/page.tsx # แก้ไขสินค้า
-│   │   └── stock/               # จัดการสต็อก
-│   │       ├── page.tsx         # รายการสต็อก
-│   │       └── [id]/page.tsx    # แก้ไขสต็อกแต่ละรายการ
+├── app/                             # Next.js App Router
+│   ├── admin/                       # Admin Portal
+│   │   ├── layout.tsx               # Admin Layout (Sidebar, Auth Guard)
+│   │   ├── login/page.tsx           # Admin Login
+│   │   ├── orders/page.tsx          # จัดการคำสั่งซื้อ
+│   │   ├── products/                # จัดการสินค้า
+│   │   │   ├── page.tsx             # รายการสินค้า
+│   │   │   ├── create/page.tsx      # เพิ่มสินค้า
+│   │   │   └── edit/[id]/page.tsx   # แก้ไขสินค้า
+│   │   └── stock/                   # จัดการสต็อก
+│   │       ├── page.tsx             # รายการสต็อก
+│   │       └── [id]/page.tsx        # แก้ไขสต็อกแต่ละรายการ
 │   │
-│   ├── api/auth/[...nextauth]/  # NextAuth Configuration
+│   ├── api/auth/[...nextauth]/      # NextAuth Configuration
 │   │   └── route.ts
 │   │
-│   ├── auth/login/              # Customer Login
+│   ├── auth/login/                  # Customer Login
 │   │   └── page.tsx
 │   │
-│   ├── cart/page.tsx            # ตะกร้าสินค้า
-│   ├── checkout/page.tsx        # ชำระเงิน
-│   ├── dashboard/page.tsx       # Customer Dashboard
+│   ├── cart/page.tsx                # ตะกร้าสินค้า
+│   ├── checkout/page.tsx            # ชำระเงิน
+│   ├── dashboard/page.tsx           # Customer Dashboard
 │   │
-│   ├── orders/                  # ระบบออร์เดอร์
-│   │   ├── details/[id]/page.tsx  # รายละเอียดออร์เดอร์
-│   │   └── success/[id]/page.tsx  # หน้าสั่งซื้อสำเร็จ
+│   ├── orders/                      # ระบบออร์เดอร์
+│   │   ├── details/[id]/page.tsx    # รายละเอียดออร์เดอร์
+│   │   └── success/[id]/page.tsx    # หน้าสั่งซื้อสำเร็จ
 │   │
-│   ├── payment/notify/[id]/     # แจ้งชำระเงิน
+│   ├── payment/notify/[id]/         # แจ้งชำระเงิน
 │   │   └── page.tsx
 │   │
-│   ├── products/page.tsx        # หน้ารายการสินค้า
-│   ├── page.tsx                 # หน้าแรก
-│   ├── layout.tsx               # Root Layout
-│   └── globals.css              # Global Styles
+│   ├── products/page.tsx            # หน้ารายการสินค้า
+│   ├── page.tsx                     # หน้าแรก
+│   ├── layout.tsx                   # Root Layout
+│   └── globals.css                  # Global Styles
 │
-├── components/                  # Reusable Components
-│   ├── ClientLayout.tsx         # Layout Wrapper
-│   ├── Navbar.tsx               # Navigation Bar
-│   ├── Footer.tsx               # Footer
-│   ├── HomeView.tsx             # Home Page View
-│   ├── ProductsView.tsx         # Products Page View
-│   ├── BackToTop.tsx            # Back to Top Button
-│   ├── BootstrapClient.tsx      # Bootstrap JS Loader
-│   └── Providers.tsx            # Context Providers
+├── components/                      # Reusable Components
+│   ├── ClientLayout.tsx             # Layout Wrapper
+│   ├── Navbar.tsx                   # Navigation Bar
+│   ├── Footer.tsx                   # Footer
+│   ├── HomeView.tsx                 # Home Page View
+│   ├── ProductsView.tsx             # Products Page View
+│   ├── BackToTop.tsx                # Back to Top Button
+│   ├── BootstrapClient.tsx          # Bootstrap JS Loader
+│   └── Providers.tsx                # Context Providers
 │
-├── context/                     # React Context
-│   └── CartContext.tsx          # Shopping Cart Context
+├── context/                         # React Context
+│   └── CartContext.tsx              # Shopping Cart Context
 │
-├── lib/                         # Utilities
-│   └── api.ts                   # API Endpoints Configuration
+├── lib/                             # Utilities
+│   └── api.ts                       # API Endpoints Configuration
 │
-├── types/                       # TypeScript Types
-│   └── index.ts                 # Global Type Definitions
+├── types/                           # TypeScript Types
+│   └── index.ts                     # Global Type Definitions
 │
-└── middleware.ts                # Auth Middleware
+└── middleware.ts                    # Auth Middleware
 ```
 
 ## ⚙️ การติดตั้ง
@@ -137,8 +142,8 @@ src/
 
 1. **Clone Repository**
 ```bash
-git clone https://github.com/yourusername/sisaket-charity-shop.git
-cd sisaket-charity-shop
+git clone https://github.com/yourusername/sisaket-shirt.git
+cd sisaket-shirt
 ```
 
 2. **ติดตั้ง Dependencies**
@@ -378,26 +383,16 @@ CMD ["npm", "start"]
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
 
-## 👥 Authors
-
-- **YEC Sisaket Team** - *Initial work* - [YEC Sisaket](https://github.com/yecsisaket)
-
-## 🙏 Acknowledgments
-
-- หอการค้าจังหวัดศรีสะเกษ
-- กลุ่มผู้ประกอบการรุ่นใหม่ (YEC)
-- ผู้สนับสนุนโครงการ 243 ปี จังหวัดศรีสะเกษ
-
 ## 📞 Contact & Support
 
-- **เบอร์โทร**: 093-358-1622
-- **Facebook**: [YEC Sisaket Page]
-- **LINE OA**: [@yecsisaket]
-- **Email**: support@yecsisaket.com
+- **เบอร์โทร**: 
+- **Facebook**: []
+- **LINE OA**: []
+- **Email**: 
 
 ---
 
 <div align="center">
-  <p>Made with ❤️ by YEC Sisaket Team</p>
+  <p>Made with ❤️ by ComSci SSKRU</p>
   <p>🎉 ร่วมเฉลิมฉลอง 243 ปี เมืองศรีสะเกษ</p>
 </div>

@@ -5,11 +5,10 @@ import { useSession } from "next-auth/react";
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { Container, Card, Button, Row, Col, Spinner, Table, Form, Badge } from 'react-bootstrap';
-import { FaArrowLeft, FaSave, FaBox, FaTag, FaInfoCircle, FaHashtag, FaChartLine } from 'react-icons/fa';
+import { Container, Card, Button, Row, Col, Spinner, Table, Badge } from 'react-bootstrap';
+import { FaArrowLeft, FaSave, FaBox, FaTag, FaInfoCircle, FaHashtag, FaChartLine, FaMinus, FaPlus } from 'react-icons/fa';
 import API_ENDPOINTS from '@/lib/api';
 
-// ✅ ประกาศไซส์มาตรฐานให้ครบ
 const ALL_SIZES = ['SSS', 'SS', 'S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL', '6XL', '7XL', '8XL', '9XL', '10XL'];
 
 export default function ManageStockDetailPage() {
@@ -18,7 +17,7 @@ export default function ManageStockDetailPage() {
   const router = useRouter();
   
   const [product, setProduct] = useState<any>(null);
-  const [addInputs, setAddInputs] = useState<Record<string, number>>({}); // เก็บค่าที่ต้องการ "เพิ่ม"
+  const [addInputs, setAddInputs] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -34,37 +33,45 @@ export default function ManageStockDetailPage() {
     if(id) fetchProduct();
   }, [id]);
 
+  const updateStockAmount = (size: string, delta: number) => {
+      const currentAdd = addInputs[size] || 0;
+      const newAdd = currentAdd + delta;
+
+      const stockItem = product.stock.find((s: any) => s.size === size);
+      const currentQty = stockItem ? stockItem.quantity : 0;
+      const potentialNewTotal = currentQty + newAdd;
+
+      if (potentialNewTotal < 0) return;
+
+      setAddInputs({ ...addInputs, [size]: newAdd });
+  };
+
   const handleSave = async () => {
       setSaving(true);
       try {
-          // 🚨 แก้ไขจุดที่ 1: วนลูปตาม ALL_SIZES เพื่อเช็คทุกช่องที่กรอก (แม้ไซส์นั้นจะยังไม่มีใน DB)
           for (const size of ALL_SIZES) {
-             const addAmount = addInputs[size] || 0;
-             
-             if (addAmount !== 0) {
-                 // หาจำนวนเดิม (ถ้าไม่มีใน DB ให้ถือเป็น 0)
-                 const stockItem = product.stock.find((s: any) => s.size === size);
-                 const currentQty = stockItem ? stockItem.quantity : 0;
+              const addAmount = addInputs[size] || 0;
+              
+              if (addAmount !== 0) {
+                  const stockItem = product.stock.find((s: any) => s.size === size);
+                  const currentQty = stockItem ? stockItem.quantity : 0;
+                  const newTotal = currentQty + addAmount;
 
-                 const newTotal = currentQty + addAmount;
+                  if (newTotal < 0) {
+                      alert(`ไม่สามารถบันทึกได้: ไซส์ ${size} จะเหลือต่ำกว่า 0 (${newTotal})`);
+                      setSaving(false);
+                      return;
+                  }
 
-                 // ป้องกันค่าติดลบ
-                 if (newTotal < 0) {
-                     alert(`ไม่สามารถบันทึกได้: ไซส์ ${size} จะเหลือต่ำกว่า 0 (${newTotal})`);
-                     setSaving(false);
-                     return; // หยุดทันที
-                 }
-
-                 // ส่ง API
-                 await fetch(API_ENDPOINTS.PRODUCT_STOCK(id as string), {
-                     method: 'PATCH',
-                     headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${(session as any)?.accessToken}`
-                     },
-                     body: JSON.stringify({ size: size, quantity: newTotal, mode: 'set' })
-                 });
-             }
+                  await fetch(API_ENDPOINTS.PRODUCT_STOCK(id as string), {
+                      method: 'PATCH',
+                      headers: {
+                         'Content-Type': 'application/json',
+                         'Authorization': `Bearer ${(session as any)?.accessToken}`
+                      },
+                      body: JSON.stringify({ size: size, quantity: newTotal, mode: 'set' })
+                  });
+              }
           }
           alert('อัปเดตสต็อกเรียบร้อย');
           setAddInputs({}); 
@@ -72,7 +79,7 @@ export default function ManageStockDetailPage() {
       } catch (error) { alert('Error'); } finally { setSaving(false); }
   };
 
-  if (loading) return <div className="text-center py-5"><Spinner animation="border"/></div>;
+  if (loading) return <div className="vh-100 d-flex justify-content-center align-items-center"><Spinner animation="border" variant="primary"/></div>;
   if (!product) return <div className="text-center py-5">ไม่พบสินค้า</div>;
 
   const currentTotalStock = product.stock.reduce((sum: number, item: any) => sum + item.quantity, 0);
@@ -85,146 +92,166 @@ export default function ManageStockDetailPage() {
   const newGrandTotal = currentTotalStock + totalAddedAmount;
 
   return (
-    <Container className="pb-5">
-        <div className="d-flex align-items-center mb-4">
-            <Button variant="light" className="me-3 rounded-circle shadow-sm" onClick={() => router.back()}><FaArrowLeft/></Button>
-            <h3 className="fw-bold mb-0">จัดการสต็อกสินค้า</h3>
+    <Container fluid className="px-4 py-4">
+        
+        {/* Header */}
+        <div className="d-flex align-items-center justify-content-between mb-4">
+            <div className="d-flex align-items-center gap-3">
+                {/* ✅ แก้ไขปุ่มย้อนกลับ: ใช้ Gradient สีส้ม + เงา ให้เด่นขึ้น */}
+                <Button 
+                    className="rounded-circle shadow border-0 p-0 d-flex align-items-center justify-content-center hover-scale text-white" 
+                    style={{width: 45, height: 45, background: 'linear-gradient(135deg, #f59e0b, #d97706)'}} 
+                    onClick={() => router.back()}
+                >
+                    <FaArrowLeft size={18}/>
+                </Button>
+                <div>
+                    <h4 className="fw-bold text-dark mb-0">จัดการสต็อกสินค้า</h4>
+                    <small className="text-muted">ปรับปรุงจำนวนสินค้าคงคลัง</small>
+                </div>
+            </div>
         </div>
 
         {/* Product Info Card */}
-        <Card className="border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+        <Card className="border-status-warning shadow rounded-4 overflow-hidden mb-4">
             <Card.Body className="p-4">
                 <div className="d-flex flex-column flex-md-row align-items-start gap-4">
-                    <div className="position-relative rounded-4 overflow-hidden border flex-shrink-0 shadow-sm" style={{width: 150, height: 150}}>
-                        <Image src={product.imageUrl} alt={product.name} fill style={{objectFit:'cover'}} />
+                    <div className="position-relative rounded-4 overflow-hidden border flex-shrink-0 shadow-sm bg-white p-1" style={{width: 120, height: 120}}>
+                        <div className="position-relative w-100 h-100 rounded-3 overflow-hidden">
+                            <Image src={product.imageUrl} alt={product.name} fill style={{objectFit:'cover'}} />
+                        </div>
                     </div>
+                    
                     <div className="flex-grow-1 w-100">
-                        <div className="d-flex flex-column flex-md-row justify-content-between align-items-start mb-3">
+                        <div className="d-flex flex-column flex-md-row justify-content-between align-items-start mb-2">
                             <div>
-                                <h4 className="fw-bold text-primary mb-1">{product.name}</h4>
-                                <small className="text-muted d-flex align-items-center gap-1" style={{fontSize: '0.85rem'}}>
-                                    <FaHashtag size={12}/> รหัส: <span className="font-monospace select-all bg-light px-1 rounded border">{product._id}</span>
+                                <h5 className="fw-bold text-primary mb-1">{product.name}</h5>
+                                <small className="text-muted d-flex align-items-center gap-2 font-monospace" style={{fontSize: '0.8rem'}}>
+                                    <FaHashtag size={10}/> {product._id}
                                 </small>
                             </div>
-                            <Badge bg={currentTotalStock > 0 ? 'success' : 'danger'} className="fs-6 px-3 py-2 shadow-sm mt-2 mt-md-0">
+                            <Badge bg={currentTotalStock > 0 ? 'success' : 'danger'} className="px-3 py-2 shadow-sm mt-2 mt-md-0 rounded-pill fw-normal">
                                 <FaBox className="me-2"/> รวมปัจจุบัน {currentTotalStock.toLocaleString()} ตัว
                             </Badge>
                         </div>
 
-                        <div className="d-flex flex-wrap gap-3 mb-3">
-                            <div className="px-3 py-2 bg-light rounded-3 border d-flex align-items-center gap-2">
-                                <FaTag className="text-secondary"/>
-                                <div><small className="d-block text-muted lh-1" style={{fontSize: '0.7rem'}}>ประเภท</small><span className="fw-bold text-dark">{product.type}</span></div>
+                        <div className="d-flex flex-wrap gap-2 mb-3">
+                            <div className="px-3 py-1 bg-light rounded-3 border d-flex align-items-center gap-2">
+                                <FaTag className="text-secondary" size={12}/>
+                                <span className="fw-bold text-dark small">{product.type}</span>
                             </div>
-                            <div className="px-3 py-2 bg-light rounded-3 border d-flex align-items-center gap-2">
-                                <span className="fw-bold text-dark" style={{fontSize: '1.2rem'}}>฿{product.price.toLocaleString()}</span>
+                            <div className="px-3 py-1 bg-light rounded-3 border d-flex align-items-center gap-2">
+                                <span className="fw-bold text-dark small">฿{product.price.toLocaleString()}</span>
                             </div>
                         </div>
                         
-                        <div className="p-3 bg-light rounded-3 border border-light-subtle">
-                            <div className="d-flex align-items-center gap-2 mb-1 text-secondary">
-                                <FaInfoCircle size={14}/> <small className="fw-bold">รายละเอียดสินค้า</small>
-                            </div>
-                            <p className="mb-0 text-dark small text-break" style={{whiteSpace: 'pre-wrap'}}>{product.description || '-'}</p>
-                        </div>
+                        <p className="mb-0 text-secondary small text-break" style={{whiteSpace: 'pre-wrap'}}>{product.description || '-'}</p>
                     </div>
                 </div>
             </Card.Body>
         </Card>
 
         {/* Stock Calculator Table */}
-        <Card className="border-0 shadow-lg rounded-4 overflow-hidden">
+        <Card className="border-status-warning shadow rounded-4 overflow-hidden">
             <div className="card-header bg-warning bg-opacity-10 border-bottom-0 p-3 text-center">
-                 <h5 className="fw-bold text-dark mb-0">🧮 ตารางคำนวณสต็อก (Real-time)</h5>
-                 <small className="text-muted">กรอกจำนวนที่ต้องการเพิ่ม (+) หรือลด (-) ในช่องสีขาว</small>
+                 <h6 className="fw-bold text-dark mb-0 d-flex align-items-center justify-content-center gap-2">
+                     <FaChartLine className="text-warning"/> ตารางคำนวณสต็อก
+                 </h6>
+                 <small className="text-muted" style={{fontSize: '0.75rem'}}>กดปุ่ม <b>+</b> หรือ <b>-</b> เพื่อปรับปรุงจำนวนคงเหลือ</small>
             </div>
+            
             <Card.Body className="p-0">
-                <Table responsive hover className="align-middle mb-0 text-center">
-                    <thead className="bg-light text-secondary">
-                        <tr>
-                            <th className="py-3" style={{width: '20%'}}>ขนาด (Size)</th>
-                            <th className="py-3" style={{width: '20%'}}>จำนวนเดิม</th>
-                            <th className="py-3 text-primary" style={{width: '30%'}}>เพิ่ม/ลด</th>
-                            <th className="py-3 bg-success bg-opacity-10 fw-bold text-success" style={{width: '30%'}}>ยอดรวมใหม่</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {ALL_SIZES.map((size) => {
-                            // หาข้อมูลสต็อก (ถ้าไม่มีให้เป็น 0)
-                            const stockItem = product.stock.find((s: any) => s.size === size);
-                            const currentQty = stockItem ? stockItem.quantity : 0;
-                            const hasRecord = !!stockItem;
+                <div className="table-responsive">
+                    <Table hover size="sm" className="align-middle mb-0" style={{minWidth: '600px'}}>
+                        <thead className="bg-light text-secondary text-uppercase small letter-spacing-1">
+                            <tr className="text-center" style={{fontSize: '0.8rem'}}>
+                                <th className="py-2" style={{width: '15%'}}>ขนาด (Size)</th>
+                                <th className="py-2" style={{width: '20%'}}>จำนวนเดิม</th>
+                                <th className="py-2 text-primary" style={{width: '30%'}}>เพิ่ม/ลด</th>
+                                <th className="py-2 bg-success bg-opacity-10 fw-bold text-success" style={{width: '35%'}}>ยอดรวมใหม่</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {ALL_SIZES.map((size) => {
+                                const stockItem = product.stock.find((s: any) => s.size === size);
+                                const currentQty = stockItem ? stockItem.quantity : 0;
+                                const hasRecord = !!stockItem;
 
-                            // ดึงค่าที่กรอก (ถ้าไม่มีคือ 0)
-                            const addQty = addInputs[size] || 0;
-                            const newTotal = currentQty + addQty;
-                            
-                            const isNegative = newTotal < 0;
+                                const addQty = addInputs[size] || 0;
+                                const newTotal = currentQty + addQty;
+                                const isNegative = newTotal < 0;
 
-                            return (
-                                <tr key={size}>
-                                    <td className="fw-bold fs-5">{size}</td>
-                                    
-                                    <td>
-                                        {hasRecord ? (
-                                            <span className="badge bg-secondary fs-6 fw-normal px-3">{currentQty}</span>
-                                        ) : (
-                                            <span className="badge bg-light text-muted border px-2">-</span>
-                                        )}
-                                    </td>
+                                return (
+                                    <tr key={size} className="text-center border-bottom">
+                                        <td className="fw-bold text-dark py-2">{size}</td>
+                                        
+                                        <td className="py-2">
+                                            {hasRecord ? (
+                                                <span className="badge bg-secondary bg-opacity-10 text-dark border px-2 rounded-pill">{currentQty}</span>
+                                            ) : (
+                                                <span className="text-muted">-</span>
+                                            )}
+                                        </td>
 
-                                    <td>
-                                        <div className="d-flex justify-content-center align-items-center">
-                                            {/* 🚨 แก้ไขจุดที่ 2: ใส่ value เป็น addInputs[size] || '' เพื่อแก้ปัญหา Uncontrolled Input */}
-                                            <Form.Control 
-                                                type="number" 
-                                                className="text-center border-primary fw-bold text-primary shadow-sm"
-                                                style={{maxWidth: '120px', fontSize: '1.1rem'}}
-                                                placeholder="0"
-                                                value={addInputs[size] === undefined || addInputs[size] === 0 ? '' : addInputs[size]} 
-                                                onChange={(e) => {
-                                                    const val = e.target.value;
-                                                    // ถ้าลบจนหมดให้เป็น 0
-                                                    setAddInputs({...addInputs, [size]: val === '' ? 0 : Number(val)})
-                                                }}
-                                            />
-                                        </div>
-                                    </td>
+                                        <td className="py-2">
+                                            <div className="d-flex justify-content-center align-items-center gap-2 bg-white rounded-pill shadow-sm p-1 border mx-auto" style={{width: 'fit-content'}}>
+                                                <Button 
+                                                    variant="link" 
+                                                    className={`text-decoration-none p-0 rounded-circle hover-bg-gray d-flex align-items-center justify-content-center ${newTotal <= 0 ? 'text-muted cursor-not-allowed opacity-50' : 'text-danger'}`}
+                                                    style={{width: 24, height: 24}}
+                                                    onClick={() => newTotal > 0 && updateStockAmount(size, -1)}
+                                                    disabled={newTotal <= 0}
+                                                >
+                                                    <FaMinus size={10}/>
+                                                </Button>
+                                                
+                                                <div className={`fw-bold text-center ${addQty > 0 ? 'text-success' : (addQty < 0 ? 'text-danger' : 'text-dark')}`} style={{minWidth: '30px', fontSize: '0.9rem'}}>
+                                                     {addQty > 0 ? '+' : ''}{addQty}
+                                                </div>
 
-                                    <td className={isNegative ? "bg-danger bg-opacity-10" : "bg-success bg-opacity-10"}>
-                                        <span className={`fs-5 fw-bold ${isNegative ? 'text-danger' : 'text-success'}`}>
-                                            {newTotal}
-                                        </span>
-                                        {isNegative && <small className="d-block text-danger fw-bold" style={{fontSize: '0.7rem'}}>(ติดลบ!)</small>}
-                                        {!isNegative && newTotal !== currentQty && <small className="d-block text-muted" style={{fontSize: '0.7rem'}}>(เดิม {currentQty} {addQty >= 0 ? '+' : '-'} {Math.abs(addQty)})</small>}
-                                    </td>
-                                </tr>
-                            );
-                        })}
-                    </tbody>
-                </Table>
+                                                <Button 
+                                                    variant="link" 
+                                                    className="text-decoration-none text-success p-0 rounded-circle hover-bg-gray d-flex align-items-center justify-content-center"
+                                                    style={{width: 24, height: 24}}
+                                                    onClick={() => updateStockAmount(size, 1)}
+                                                >
+                                                    <FaPlus size={10}/>
+                                                </Button>
+                                            </div>
+                                        </td>
+
+                                        <td className={`py-2 ${isNegative ? "bg-danger bg-opacity-10" : "bg-success bg-opacity-10"}`}>
+                                            <span className={`fw-bold ${isNegative ? 'text-danger' : 'text-success'}`}>
+                                                {newTotal}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </Table>
+                </div>
             </Card.Body>
             
             <div className="card-footer bg-white p-4 border-top shadow-sm">
                  <Row className="align-items-center g-3">
                     <Col md={8}>
-                        <div className="d-flex flex-column flex-md-row gap-3 gap-md-5 p-3 bg-light rounded-3 border">
-                            <div>
-                                <small className="text-muted d-block">ยอดรวมเดิม</small>
+                        <div className="d-flex flex-column flex-md-row gap-3 gap-md-4 p-3 bg-light rounded-4 border justify-content-around text-center">
+                            <div className="flex-fill">
+                                <small className="text-muted d-block text-uppercase letter-spacing-1" style={{fontSize:'0.7rem'}}>ยอดรวมเดิม</small>
                                 <span className="fw-bold fs-5">{currentTotalStock.toLocaleString()}</span>
                             </div>
-                            <div className="d-flex align-items-center">
-                                <FaChartLine className="text-secondary me-3 d-none d-md-block"/>
-                                <div>
-                                    <small className="text-muted d-block">เปลี่ยนแปลงสุทธิ</small>
-                                    <span className={`fw-bold fs-5 ${totalAddedAmount > 0 ? 'text-success' : (totalAddedAmount < 0 ? 'text-danger' : 'text-dark')}`}>
-                                        {totalAddedAmount > 0 ? '+' : ''}{totalAddedAmount.toLocaleString()}
-                                    </span>
-                                </div>
+                            <div className="d-none d-md-block border-start"></div>
+                            <div className="flex-fill">
+                                <small className="text-muted d-block text-uppercase letter-spacing-1" style={{fontSize:'0.7rem'}}>เปลี่ยนแปลงสุทธิ</small>
+                                <span className={`fw-bold fs-5 ${totalAddedAmount > 0 ? 'text-success' : (totalAddedAmount < 0 ? 'text-danger' : 'text-dark')}`}>
+                                    {totalAddedAmount > 0 ? '+' : ''}{totalAddedAmount.toLocaleString()}
+                                </span>
                             </div>
-                            <div className="ms-md-auto ps-md-4 border-start-md">
-                                <small className="text-success fw-bold d-block">ยอดรวมใหม่ทั้งหมด</small>
-                                <span className={`fw-bold fs-3 ${newGrandTotal < 0 ? 'text-danger' : 'text-success'}`}>
+                            <div className="d-none d-md-block border-start"></div>
+                            <div className="flex-fill">
+                                <small className="text-success fw-bold d-block text-uppercase letter-spacing-1" style={{fontSize:'0.7rem'}}>ยอดรวมใหม่</small>
+                                <span className={`fw-bold fs-4 ${newGrandTotal < 0 ? 'text-danger' : 'text-success'}`}>
                                     {newGrandTotal.toLocaleString()}
                                 </span> 
                                 <span className="text-muted small ms-1">ตัว</span>
@@ -234,9 +261,9 @@ export default function ManageStockDetailPage() {
                     <Col md={4} className="text-end">
                          <Button 
                             size="lg" 
-                            className="w-100 rounded-pill px-4 fw-bold shadow btn-gradient-primary"
+                            className="w-100 rounded-pill px-4 fw-bold shadow-lg btn-gradient-primary border-0"
                             onClick={handleSave}
-                            disabled={saving || newGrandTotal < 0}
+                            disabled={saving || newGrandTotal < 0 || totalAddedAmount === 0}
                          >
                             {saving ? <Spinner size="sm"/> : <><FaSave className="me-2"/> ยืนยันการอัปเดต</>}
                          </Button>

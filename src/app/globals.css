@@ -860,3 +860,112 @@ a { text-decoration: none; }
   box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3);
 }
 
+/* =========================================
+   ➕ CREATE PRODUCT PAGE UTILS
+   ========================================= */
+
+.hover-bg-gray:hover {
+  background-color: #e9ecef !important;
+  border-color: #adb5bd !important;
+}
+
+.transform-scale {
+  transform: scale(1.1);
+}
+
+.border-dashed {
+  border-style: dashed !important;
+}
+
+.letter-spacing-1 {
+  letter-spacing: 1px;
+}
+
+/* ปรับแต่ง Input Group ให้ดู Modern */
+.input-group-modern .input-group-text {
+  background-color: transparent;
+  border: none;
+  padding-right: 0;
+}
+
+.input-group-modern .form-control,
+.input-group-modern .form-select {
+  background-color: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.input-group-modern {
+  background-color: #f8f9fa; /* bg-light */
+  border-radius: 0.5rem;     /* rounded-3 */
+  overflow: hidden;
+}
+
+/* =========================================
+   🛍️ ADMIN PRODUCTS PAGE
+   ========================================= */
+
+/* Filter รูปภาพสินค้าที่ปิดการขาย */
+.grayscale {
+  filter: grayscale(100%);
+  opacity: 0.6;
+}
+
+/* ปรับแต่ง Switch Toggle ให้เป็นสีเขียว */
+.form-check-input:checked {
+  background-color: #10b981;
+  border-color: #10b981;
+}
+
+.form-check-input:focus {
+  box-shadow: 0 0 0 0.25rem rgba(16, 185, 129, 0.25);
+  border-color: #10b981;
+}
+
+/* Fix Alignment for Switch inside Table */
+.switch-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: auto;
+  margin: 0;
+  padding: 0;
+}
+.switch-center .form-check-input {
+  margin-left: 0 !important;
+  float: none;
+}
+
+/* =========================================
+   🛍️ ADMIN PRODUCTS PAGE STYLES
+   ========================================= */
+
+/* Filter สำหรับสินค้าที่ปิดการขาย (ภาพขาวดำ + จางลง) */
+.grayscale {
+  filter: grayscale(100%);
+  opacity: 0.6;
+  transition: all 0.3s ease;
+}
+
+/* ปรับแต่ง Switch Toggle ให้เป็นสีเขียว (Success) */
+.form-check-input:checked {
+  background-color: #10b981 !important;
+  border-color: #10b981 !important;
+}
+
+.form-check-input:focus {
+  box-shadow: 0 0 0 0.25rem rgba(16, 185, 129, 0.25) !important;
+  border-color: #10b981 !important;
+}
+
+/* Helper จัดกึ่งกลาง Switch ในตาราง */
+.switch-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+.switch-center .form-check-input {
+  margin: 0 !important; /* ลบ margin default ของ bootstrap */
+  float: none;
+}

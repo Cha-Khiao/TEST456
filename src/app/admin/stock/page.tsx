@@ -4,15 +4,14 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Container, Card, Row, Col, Badge, Button, Form, InputGroup } from 'react-bootstrap';
-import { FaBoxOpen, FaArrowRight, FaSearch, FaFilter } from 'react-icons/fa';
+import { Container, Card, Row, Col, Badge, Button, Form, InputGroup, Spinner } from 'react-bootstrap';
+import { FaBoxOpen, FaArrowRight, FaSearch, FaFilter, FaLayerGroup } from 'react-icons/fa';
 import API_ENDPOINTS from '@/lib/api';
 
 export default function StockListPage() {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   
-  // ✅ เพิ่ม State สำหรับค้นหาและกรอง
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
 
@@ -27,7 +26,6 @@ export default function StockListPage() {
     fetchProducts();
   }, []);
 
-  // ✅ Logic การกรองและค้นหา
   const uniqueTypes = Array.from(new Set(products.map(p => p.type)));
   
   const filteredProducts = products.filter(product => {
@@ -37,28 +35,35 @@ export default function StockListPage() {
   });
 
   return (
-    <Container>
+    // ✅ 1. ลบ style background ออก แก้ปัญหาพื้นหลังซ้อน
+    <Container fluid className="px-4 py-4">
+        
+        {/* Header Section */}
         <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
             <div>
-                <h2 className="fw-bold text-dark mb-1">จัดการสต็อกสินค้า</h2>
-                <p className="text-muted mb-0">เลือกสินค้าเพื่ออัปเดตจำนวนคงเหลือ</p>
+                <h4 className="fw-bold text-dark mb-0">จัดการสต็อกสินค้า</h4>
+                <p className="text-muted mb-0 small">เลือกสินค้าเพื่อตรวจสอบและอัปเดตจำนวนคงเหลือ</p>
             </div>
             
-            {/* ✅ Search & Filter Controls */}
+            {/* Search & Filter */}
             <div className="d-flex gap-2">
-                <InputGroup>
-                    <InputGroup.Text className="bg-white border-end-0"><FaSearch className="text-muted"/></InputGroup.Text>
+                <InputGroup className="shadow-sm rounded-pill overflow-hidden border bg-white" style={{maxWidth: '250px'}}>
+                    <InputGroup.Text className="bg-white border-0 ps-3"><FaSearch className="text-muted"/></InputGroup.Text>
                     <Form.Control 
                         placeholder="ค้นหาชื่อสินค้า..." 
-                        className="border-start-0"
+                        className="border-0 ps-2 shadow-none"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </InputGroup>
 
-                <InputGroup style={{maxWidth: '180px'}}>
-                    <InputGroup.Text className="bg-white"><FaFilter/></InputGroup.Text>
-                    <Form.Select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="bg-white">
+                <InputGroup className="shadow-sm rounded-pill overflow-hidden border bg-white" style={{maxWidth: '180px'}}>
+                    <InputGroup.Text className="bg-white border-0 ps-3"><FaFilter className="text-muted"/></InputGroup.Text>
+                    <Form.Select 
+                        value={filterType} 
+                        onChange={(e) => setFilterType(e.target.value)} 
+                        className="bg-white border-0 shadow-none text-dark fw-bold cursor-pointer"
+                    >
                         <option value="all">ทุกประเภท</option>
                         {uniqueTypes.map((t, i) => <option key={i} value={t}>{t}</option>)}
                     </Form.Select>
@@ -66,36 +71,57 @@ export default function StockListPage() {
             </div>
         </div>
         
-        {loading ? <div className="text-center py-5">Loading...</div> : (
+        {loading ? (
+            <div className="text-center py-5"><Spinner animation="border" variant="primary"/></div>
+        ) : (
             <Row className="g-3">
                 {filteredProducts.length === 0 ? (
-                    <Col xs={12} className="text-center py-5 text-muted">
-                        ไม่พบสินค้าที่ค้นหา
+                    <Col xs={12}>
+                        <div className="text-center py-5 bg-white rounded-4 shadow-sm">
+                            <FaBoxOpen size={40} className="text-muted opacity-25 mb-3"/>
+                            <p className="text-muted">ไม่พบสินค้าที่ค้นหา</p>
+                        </div>
                     </Col>
                 ) : (
                     filteredProducts.map(product => {
                         const totalStock = product.stock.reduce((sum:number, s:any) => sum + s.quantity, 0);
                         return (
                             <Col md={6} xl={4} key={product._id}>
-                                {/* ใช้ Link ครอบ Card ทั้งใบเพื่อให้กดง่ายขึ้น */}
-                                <Link href={`/admin/stock/${product._id}`} className="text-decoration-none">
-                                    <Card className="border-0 shadow-sm h-100 rounded-4 overflow-hidden hover-lift cursor-pointer">
+                                <Link href={`/admin/stock/${product._id}`} className="text-decoration-none group">
+                                    {/* Card */}
+                                    <Card className="shadow-sm h-100 rounded-4 overflow-hidden hover-card-up border-status-warning cursor-pointer transition-all">
                                         <Card.Body className="d-flex align-items-center p-3">
-                                            <div className="position-relative rounded-3 overflow-hidden border me-3 flex-shrink-0" style={{width: 80, height: 80}}>
-                                                <Image src={product.imageUrl} alt={product.name} fill style={{objectFit:'cover'}} />
+                                            
+                                            {/* Image */}
+                                            <div className="position-relative rounded-3 overflow-hidden border me-3 flex-shrink-0 shadow-sm" style={{width: 70, height: 70}}>
+                                                {product.imageUrl ? (
+                                                    <Image src={product.imageUrl} alt={product.name} fill style={{objectFit:'cover'}} />
+                                                ) : (
+                                                    <div className="w-100 h-100 bg-light d-flex align-items-center justify-content-center"><FaBoxOpen className="text-secondary"/></div>
+                                                )}
                                             </div>
-                                            <div className="flex-grow-1">
+
+                                            {/* Info */}
+                                            <div className="flex-grow-1 overflow-hidden">
                                                 <h6 className="fw-bold mb-1 text-dark text-truncate">{product.name}</h6>
-                                                <div className="d-flex gap-2 mb-2 align-items-center">
-                                                    <Badge bg="light" text="dark" className="border fw-normal">{product.type}</Badge>
-                                                    <span className={`small fw-bold ${totalStock > 0 ? 'text-success' : 'text-danger'}`}>
-                                                        {totalStock} ตัว
+                                                <div className="d-flex align-items-center gap-2">
+                                                    <Badge bg="light" text="dark" className="border fw-normal px-2 py-1 rounded-pill">{product.type}</Badge>
+                                                    
+                                                    {/* Stock Badge */}
+                                                    <span className={`small fw-bold ${totalStock > 0 ? 'text-success bg-success' : 'text-danger bg-danger'} bg-opacity-10 px-2 py-1 rounded-pill border border-opacity-25`}>
+                                                        <FaLayerGroup className="me-1"/> {totalStock} ตัว
                                                     </span>
                                                 </div>
                                             </div>
-                                            <div className="bg-light rounded-circle p-2 text-primary">
-                                                <FaArrowRight />
+
+                                            {/* ✅ 2. Action Arrow Button (เด่นขึ้น มีมิติ มี Animation) */}
+                                            <div className="ms-2">
+                                                <div className="btn-gradient-warning rounded-circle p-0 d-flex align-items-center justify-content-center text-white shadow hover-scale transition-all" 
+                                                     style={{width: 40, height: 40}}>
+                                                    <FaArrowRight />
+                                                </div>
                                             </div>
+
                                         </Card.Body>
                                     </Card>
                                 </Link>

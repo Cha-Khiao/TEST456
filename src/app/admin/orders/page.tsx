@@ -8,17 +8,16 @@ import Image from 'next/image';
 import { Container, Card, Table, Badge, Button, Nav, Modal, Row, Col, Form, InputGroup, Spinner } from 'react-bootstrap';
 import { 
   FaBoxOpen, FaCheckCircle, FaClock, FaSearch, FaTruck, FaTimesCircle, 
-  FaEdit, FaFileInvoiceDollar, FaMoneyBillWave, FaUser, FaMapMarkerAlt, FaPhone, FaTimes, FaChevronRight
+  FaEdit, FaFileInvoiceDollar, FaMoneyBillWave, FaUser, FaMapMarkerAlt, FaPhone
 } from 'react-icons/fa';
 import API_ENDPOINTS from '@/lib/api';
 
-// Mapping สีและไอคอนสำหรับแต่ละสถานะ
 const statusMap: any = {
-  'pending_payment': { label: 'รอชำระเงิน', badgeClass: 'badge-status-warning', icon: FaClock, borderClass: 'border-status-warning', color: 'warning' },
-  'verification':    { label: 'รอตรวจสอบ', badgeClass: 'badge-status-info', icon: FaSearch, borderClass: 'border-status-info', color: 'info' },
-  'shipping':        { label: 'กำลังจัดส่ง', badgeClass: 'badge-status-primary', icon: FaTruck, borderClass: 'border-status-primary', color: 'primary' },
-  'completed':       { label: 'สำเร็จ', badgeClass: 'badge-status-success', icon: FaCheckCircle, borderClass: 'border-status-success', color: 'success' },
-  'cancelled':       { label: 'ยกเลิก', badgeClass: 'badge-status-secondary', icon: FaTimesCircle, borderClass: 'border-status-secondary', color: 'secondary' },
+  'pending_payment': { label: 'รอชำระเงิน', badgeClass: 'badge-status-warning', icon: FaClock, borderClass: 'border-status-warning', color: '#f59e0b' },
+  'verification':    { label: 'รอตรวจสอบ', badgeClass: 'badge-status-info', icon: FaSearch, borderClass: 'border-status-info', color: '#0ea5e9' },
+  'shipping':        { label: 'กำลังจัดส่ง', badgeClass: 'badge-status-primary', icon: FaTruck, borderClass: 'border-status-primary', color: '#4F46E5' },
+  'completed':       { label: 'สำเร็จ', badgeClass: 'badge-status-success', icon: FaCheckCircle, borderClass: 'border-status-success', color: '#10b981' },
+  'cancelled':       { label: 'ยกเลิก', badgeClass: 'badge-status-secondary', icon: FaTimesCircle, borderClass: 'border-status-secondary', color: '#6b7280' },
 };
 
 export default function AdminOrdersPage() {
@@ -71,11 +70,7 @@ export default function AdminOrdersPage() {
         setOrders(orders.map(o => o._id === updatedOrder._id ? updatedOrder : o));
         setSelectedOrder(updatedOrder);
         
-        // ให้ Modal ปิดเฉพาะตอนที่ออร์เดอร์เข้าสู่สถานะจัดส่ง/สำเร็จ/ยกเลิก
-        if (['shipping', 'completed', 'cancelled'].includes(newStatus)) {
-            // Delay เพื่อให้เห็นสถานะใหม่ใน Modal ก่อนปิด
-            setTimeout(() => setShowModal(false), 500); 
-        }
+        if (['shipping', 'completed', 'cancelled'].includes(newStatus)) setShowModal(false);
     } catch (error) {
         alert('Error updating status');
     } finally {
@@ -104,7 +99,7 @@ export default function AdminOrdersPage() {
   const pendingSlip = orders.filter(o => o.status === 'verification').length;
 
   return (
-    <Container fluid className="px-4 py-4" style={{ backgroundColor: '#f1f5f9', minHeight: '100vh' }}>
+    <Container fluid className="px-4 py-4">
          
          <div className="d-flex justify-content-between align-items-center mb-4">
              <div>
@@ -119,7 +114,7 @@ export default function AdminOrdersPage() {
          {/* Stats Cards */}
          <Row className="g-4 mb-4">
             <Col md={4}>
-                <Card className="h-100 shadow-sm border-status-primary hover-card-up" style={{backgroundColor: '#ffffff'}}>
+                <Card className="h-100 shadow-sm border-status-primary hover-card-up rounded-4 overflow-hidden" style={{backgroundColor: '#ffffff'}}>
                     <Card.Body className="d-flex align-items-center p-4">
                         <div className="p-3 rounded-circle bg-primary bg-opacity-10 text-primary me-3">
                             <FaBoxOpen size={24} />
@@ -132,7 +127,7 @@ export default function AdminOrdersPage() {
                 </Card>
             </Col>
             <Col md={4}>
-                <Card className="h-100 shadow-sm border-status-warning hover-card-up" style={{backgroundColor: '#ffffff'}}>
+                <Card className="h-100 shadow-sm border-status-warning hover-card-up rounded-4 overflow-hidden" style={{backgroundColor: '#ffffff'}}>
                     <Card.Body className="d-flex align-items-center p-4">
                         <div className="p-3 rounded-circle bg-warning bg-opacity-10 text-warning me-3">
                             <FaSearch size={24} />
@@ -145,7 +140,7 @@ export default function AdminOrdersPage() {
                 </Card>
             </Col>
             <Col md={4}>
-                <Card className="h-100 shadow-sm border-status-success hover-card-up" style={{backgroundColor: '#ffffff'}}>
+                <Card className="h-100 shadow-sm border-status-success hover-card-up rounded-4 overflow-hidden" style={{backgroundColor: '#ffffff'}}>
                     <Card.Body className="d-flex align-items-center p-4">
                         <div className="p-3 rounded-circle bg-success bg-opacity-10 text-success me-3">
                             <FaMoneyBillWave size={24} />
@@ -159,8 +154,8 @@ export default function AdminOrdersPage() {
             </Col>
          </Row>
 
-         {/* 2. Orders Table Card */}
-         <Card className="shadow-sm border-status-primary overflow-hidden">
+         {/* Orders Table Card */}
+         <Card className="shadow-sm border-status-primary overflow-hidden rounded-4">
             <Card.Header className="bg-white border-bottom pt-4 px-4 pb-3">
                 <Row className="g-3 align-items-center">
                     <Col lg={8}>
@@ -188,6 +183,7 @@ export default function AdminOrdersPage() {
             <div className="table-responsive">
                 <Table hover striped className="align-middle mb-0" style={{minWidth: '1000px'}}>
                     <thead className="bg-light text-secondary">
+                        {/* ✅ Header: เอา text-start/end ออก เพื่อให้ Default Center ทำงาน */}
                         <tr className="text-center align-middle" style={{ height: '50px' }}>
                             <th className="py-3">Order Info</th>
                             <th>ลูกค้า</th>
@@ -208,20 +204,26 @@ export default function AdminOrdersPage() {
                                 const statusInfo = statusMap[order.status] || statusMap['pending_payment'];
                                 return (
                                     <tr key={order._id} className="text-center">
+                                        
+                                        {/* 1. Order Info */}
                                         <td>
                                             <div className="d-flex flex-column align-items-center">
-                                                <span className="fw-bold text-primary d-block font-monospace">#{order._id.slice(-6).toUpperCase()}</span>
+                                                <span className="fw-bold text-primary font-monospace">#{order._id.slice(-6).toUpperCase()}</span>
                                                 <small className="text-muted">{new Date(order.createdAt).toLocaleDateString('th-TH')}</small>
                                             </div>
                                         </td>
+
+                                        {/* 2. ลูกค้า (ลบรูปโปรไฟล์ออก + จัดกึ่งกลาง) */}
                                         <td>
                                             <div className="d-flex flex-column align-items-center">
                                                 <div className="fw-bold text-dark">{order.customerName}</div>
                                                 <small className="text-muted d-flex align-items-center gap-1"><FaPhone size={10}/> {order.phone}</small>
                                             </div>
                                         </td>
+
+                                        {/* 3. รายการสินค้า */}
                                         <td>
-                                            <div className d-flex flex-column align-items-center>
+                                            <div className="d-flex flex-column align-items-center">
                                                 <span className="badge bg-white text-dark border mb-1">{order.items.length} ชิ้น</span>
                                                 <div className="d-flex gap-1 justify-content-center">
                                                     {order.items.slice(0, 3).map((item: any, i: number) => (
@@ -233,20 +235,26 @@ export default function AdminOrdersPage() {
                                                 </div>
                                             </div>
                                         </td>
-                                        <td>
-                                            <div className="fw-bold text-dark">฿{order.totalPrice.toLocaleString()}</div>
-                                        </td>
+
+                                        {/* 4. ยอดรวม */}
+                                        <td className="fw-bold text-dark">฿{order.totalPrice.toLocaleString()}</td>
+
+                                        {/* 5. หลักฐาน */}
                                         <td>
                                             {order.paymentProofUrl ? 
                                                 <Badge bg="success" className="bg-opacity-10 text-success border border-success fw-normal px-3 py-2 rounded-pill"><FaFileInvoiceDollar className="me-1"/> มีสลิป</Badge> : 
                                                 <Badge bg="secondary" className="bg-opacity-10 text-secondary border border-secondary fw-normal px-3 py-2 rounded-pill"><FaClock className="me-1"/> รอโอน</Badge>
                                             }
                                         </td>
+
+                                        {/* 6. สถานะ */}
                                         <td>
                                             <span className={`badge ${statusInfo.badgeClass} px-3 py-2 rounded-pill d-inline-flex align-items-center`}>
                                                 <statusInfo.icon className="me-1"/> {statusInfo.label}
                                             </span>
                                         </td>
+
+                                        {/* 7. Action (เอา text-end ออก) */}
                                         <td>
                                             <Button variant="light" size="sm" className="rounded-pill px-3 border hover-scale text-primary fw-bold shadow-sm" onClick={() => { setSelectedOrder(order); setShowModal(true); }}>
                                                 <FaEdit className="me-1"/> จัดการ
@@ -264,48 +272,44 @@ export default function AdminOrdersPage() {
             </Card.Footer>
          </Card>
 
-        {/* Management Modal (Redesigned Split View) */}
+        {/* Management Modal */}
         <Modal show={showModal} onHide={() => setShowModal(false)} size="xl" centered contentClassName="bg-light border-0">
-            {/* Header Bar Dynamic Color */}
-            <div className={`w-100 ${statusMap[selectedOrder?.status]?.borderClass || 'border-status-secondary'}`} style={{ height: '6px', background: statusMap[selectedOrder?.status]?.color }}></div>
-
-            <Modal.Header closeButton className="bg-white border-bottom-0 pb-3 mx-4 mt-3 shadow-sm rounded-4">
+            <Modal.Header closeButton className="bg-white border-bottom-0 pb-3 mx-4 mt-3 shadow rounded-4">
                 <Modal.Title className="fw-bold text-dark">
                     จัดการคำสั่งซื้อ <span className="text-primary font-monospace">#{selectedOrder?._id.slice(-6).toUpperCase()}</span>
                 </Modal.Title>
             </Modal.Header>
             <Modal.Body className="px-4 pb-4">
                 {selectedOrder && (
-                    <Row className="g-4">
-                        
-                        {/* LEFT: Slip Image & Customer Info (Audit View) */}
+                    <Row className="g-4 h-100">
+                        {/* Left: Slip Image & Customer */}
                         <Col lg={5} className="d-flex flex-column gap-4">
                             
                             {/* Customer Info Card */}
-                            <Card className="shadow-sm border-status-info hover-card-up">
-                                <Card.Header className="fw-bold bg-white"><FaUser className="text-info me-2"/>ข้อมูลผู้สั่งซื้อ</Card.Header>
-                                <Card.Body>
+                            <Card className="shadow border-status-info hover-card-up rounded-4 overflow-hidden">
+                                <Card.Header className="fw-bold bg-white border-bottom"><FaUser className="text-info me-2"/>ข้อมูลผู้สั่งซื้อ</Card.Header>
+                                <Card.Body className="bg-white">
                                     <Row className="g-3">
                                         <Col sm={12}>
-                                            <div className="bg-light p-2 rounded border">
+                                            <div className="bg-light p-2 rounded-3 border">
                                                 <small className="text-muted d-block">ชื่อลูกค้า</small> 
                                                 <strong className="text-dark">{selectedOrder.customerName}</strong>
                                             </div>
                                         </Col>
                                         <Col sm={6}>
-                                            <div className="p-2 bg-light rounded border">
+                                            <div className="p-2 bg-light rounded-3 border">
                                                 <small className="text-muted d-block">เบอร์โทร</small> 
                                                 <strong className="text-dark">{selectedOrder.phone}</strong>
                                             </div>
                                         </Col>
                                         <Col sm={6}>
-                                            <div className="p-2 bg-light rounded border">
+                                            <div className="p-2 bg-light rounded-3 border">
                                                 <small className="text-muted d-block">วันที่สั่ง</small> 
                                                 <strong className="text-dark">{new Date(selectedOrder.createdAt).toLocaleDateString('th-TH')}</strong>
                                             </div>
                                         </Col>
                                         <Col sm={12}>
-                                            <div className="p-2 bg-light rounded border d-flex align-items-start gap-2">
+                                            <div className="p-2 bg-light rounded-3 border d-flex align-items-start gap-2">
                                                 <FaMapMarkerAlt className="text-danger mt-1 flex-shrink-0"/>
                                                 <div>
                                                     <small className="text-muted d-block">ที่อยู่จัดส่ง</small> 
@@ -318,9 +322,12 @@ export default function AdminOrdersPage() {
                             </Card>
 
                             {/* Slip Image Card */}
-                            <Card className="shadow-sm border-status-success flex-grow-1 overflow-hidden">
-                                <Card.Header className="fw-bold bg-white"><FaFileInvoiceDollar className="text-success me-2"/>หลักฐานการโอน</Card.Header>
-                                <Card.Body className="d-flex align-items-center justify-content-center p-0 bg-dark bg-opacity-10">
+                            <Card className="shadow border-status-success flex-grow-1 overflow-hidden rounded-4">
+                                <Card.Header className="fw-bold bg-white border-bottom d-flex justify-content-between">
+                                    <span><FaFileInvoiceDollar className="text-success me-2"/>หลักฐานการโอน</span>
+                                    {selectedOrder.paymentProofUrl ? <Badge bg="success">มีรูป</Badge> : <Badge bg="secondary">ไม่มี</Badge>}
+                                </Card.Header>
+                                <Card.Body className="d-flex align-items-center justify-content-center p-0 bg-dark bg-opacity-10" style={{minHeight: '300px'}}>
                                     {selectedOrder.paymentProofUrl ? (
                                         <div className="position-relative w-100 h-100" style={{minHeight: '300px'}}>
                                             <Image src={selectedOrder.paymentProofUrl} alt="Slip" fill style={{objectFit: 'contain'}} className="p-2"/>
@@ -339,10 +346,11 @@ export default function AdminOrdersPage() {
                         <Col lg={7}>
                             <div className="d-flex flex-column h-100 gap-4">
                                 
-                                {/* Total & Action Summary Card */}
-                                <Card className="shadow-sm border-status-warning hover-card-up">
-                                    <Card.Body className="bg-white">
-                                        <div className="d-flex justify-content-between align-items-center mb-3">
+                                {/* Action Card */}
+                                <Card className="shadow border-status-warning hover-card-up rounded-4 overflow-hidden">
+                                    <Card.Header className="bg-white fw-bold border-bottom"><FaMoneyBillWave className="text-warning me-2"/>สรุปยอดและการจัดการ</Card.Header>
+                                    <Card.Body style={{ backgroundColor: '#f8f9fa' }}>
+                                        <div className="d-flex justify-content-between align-items-center mb-3 bg-white p-3 rounded-3 shadow-sm border">
                                             <div className="d-flex flex-column">
                                                 <span className="fw-bold text-dark">ยอดรวมสุทธิ</span>
                                                 <span className="fw-bolder text-primary fs-3">฿{selectedOrder.totalPrice.toLocaleString()}</span>
@@ -352,29 +360,27 @@ export default function AdminOrdersPage() {
                                             </Badge>
                                         </div>
 
-                                        {/* Verification & Action Buttons */}
-                                        <div className="d-grid gap-2 border-top pt-3">
+                                        <div className="d-grid gap-2 pt-2">
                                             {selectedOrder.status === 'verification' && (
                                                 <div className="d-flex gap-2">
-                                                    <Button variant="success" className="w-100 py-2 fw-bold shadow-sm" onClick={() => handleUpdateStatus('shipping')} disabled={updating}>
+                                                    <Button variant="success" className="w-100 py-2 fw-bold shadow-sm rounded-pill" onClick={() => handleUpdateStatus('shipping')} disabled={updating}>
                                                         <FaCheckCircle className="me-2"/> ยืนยันสลิปถูกต้อง
                                                     </Button>
-                                                    <Button variant="outline-danger" className="w-100 py-2 fw-bold shadow-sm" onClick={() => handleUpdateStatus('pending_payment')} disabled={updating}>
+                                                    <Button variant="outline-danger" className="w-100 py-2 fw-bold shadow-sm rounded-pill" onClick={() => handleUpdateStatus('pending_payment')} disabled={updating}>
                                                         <FaTimesCircle className="me-2"/> สลิปไม่ผ่าน
                                                     </Button>
                                                 </div>
                                             )}
                                             
                                             {selectedOrder.status === 'shipping' && (
-                                                <Button variant="primary" className="w-100 py-2 fw-bold shadow-sm" onClick={() => handleUpdateStatus('completed')} disabled={updating}>
+                                                <Button variant="primary" className="w-100 py-2 fw-bold shadow-sm rounded-pill" onClick={() => handleUpdateStatus('completed')} disabled={updating}>
                                                     <FaTruck className="me-2"/> บันทึกการจัดส่งสำเร็จ
                                                 </Button>
                                             )}
 
-                                            {/* Manual Status Change */}
-                                            <InputGroup size="sm" className="mt-2">
-                                                <InputGroup.Text className="bg-light border-0">เปลี่ยนสถานะเอง</InputGroup.Text>
-                                                <Form.Select value={selectedOrder.status} onChange={(e) => handleUpdateStatus(e.target.value)} disabled={updating} className="fw-bold text-dark border-0 shadow-none bg-light">
+                                            <InputGroup size="sm" className="mt-3 shadow-sm rounded-pill overflow-hidden border border-secondary border-opacity-25">
+                                                <InputGroup.Text className="bg-white border-0 ps-3 fw-bold text-secondary">เปลี่ยนสถานะเอง</InputGroup.Text>
+                                                <Form.Select value={selectedOrder.status} onChange={(e) => handleUpdateStatus(e.target.value)} disabled={updating} className="fw-bold text-dark border-0 shadow-none bg-white">
                                                     <option value="pending_payment">รอชำระเงิน</option>
                                                     <option value="verification">รอตรวจสอบ</option>
                                                     <option value="shipping">กำลังจัดส่ง</option>
@@ -386,20 +392,20 @@ export default function AdminOrdersPage() {
                                     </Card.Body>
                                 </Card>
 
-                                {/* Items List (Cleaner View) */}
-                                <Card className="shadow-sm border-status-secondary flex-grow-1 overflow-hidden">
-                                    <Card.Header className="bg-white fw-bold"><FaBoxOpen className="text-secondary me-2"/>รายการสินค้า ({selectedOrder.items.length})</Card.Header>
-                                    <Card.Body className="p-0">
+                                {/* Items List */}
+                                <Card className="shadow border-status-primary flex-grow-1 overflow-hidden rounded-4">
+                                    <Card.Header className="bg-white fw-bold border-bottom"><FaBoxOpen className="text-primary me-2"/>รายการสินค้า ({selectedOrder.items.length})</Card.Header>
+                                    <Card.Body className="p-0 bg-white">
                                         <div className="overflow-auto" style={{maxHeight: '400px'}}>
                                             {selectedOrder.items.map((item:any, idx:number) => (
-                                                <div key={idx} className="d-flex justify-content-between align-items-center p-3 border-bottom hover-bg-light">
+                                                <div key={idx} className="d-flex justify-content-between align-items-center p-3 border-bottom hover-bg-light transition-all">
                                                     <div className="d-flex align-items-center">
-                                                        <div className="bg-light p-1 rounded me-3 shadow-sm border" style={{width:40, height:40}}>
-                                                            {item.imageUrl && <Image src={item.imageUrl} alt="item" width={30} height={30} style={{objectFit:'cover'}} />}
+                                                        <div className="bg-light p-1 rounded-3 me-3 shadow-sm border" style={{width:45, height:45}}>
+                                                            {item.imageUrl && <Image src={item.imageUrl} alt="item" width={35} height={35} style={{objectFit:'cover'}} />}
                                                         </div>
                                                         <div className="text-start">
                                                             <div className="fw-bold text-dark">{item.productName}</div>
-                                                            <small className="text-muted">Size: {item.size} x {item.quantity}</small>
+                                                            <small className="text-muted">Size: {item.size} <span className="mx-1">|</span> x{item.quantity}</small>
                                                         </div>
                                                     </div>
                                                     <div className="text-end fw-bold text-dark">
